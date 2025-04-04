@@ -57,7 +57,7 @@ onMounted(() => {
     </h2>
     <!-- Search Input -->
     <div class="flex w-full max-w-lg items-center space-x-2">
-        <Input type="text" placeholder="Anderes Workout suchen..." v-model="searchTerm"
+        <Input type="text" placeholder="Suche nach Vorschlägen..."
                @keyup.enter="search(searchTerm)" id="search-input"/>
         <Button type="button" @click="search(searchTerm)"
                 :disabled="isLoading">
@@ -95,7 +95,7 @@ onMounted(() => {
     </div>
     <div v-else-if="suggestions.length > 0"
          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pt-2">
-        <template v-for="suggestion in suggestions" :key="suggestion.title">
+        <template v-for="suggestion in suggestions" :key="`${type}-${suggestion.title}`">
             <YouTubeSuggestion v-if="type === 'youtube'" :suggestion="suggestion as YouTubeSuggestionModel"/>
             <Suggestion v-else/>
         </template>
