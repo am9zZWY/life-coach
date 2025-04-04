@@ -2,20 +2,13 @@
 import '@/styles/global.css';
 
 import { RouterView } from 'vue-router'
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import AppSidebar from "@/components/AppSidebar.vue";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Apple, Goal, House } from "lucide-vue-next"
 </script>
 
 <template>
     <SidebarProvider>
-        <AppSidebar/>
         <SidebarInset>
-            <header class="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-                <SidebarTrigger class="-ml-1"/>
-                <Separator orientation="vertical" class="mr-2 h-4"/>
-            </header>
-
             <!-- App Container -->
             <main class="flex-1 px-4 py-2 space-y-4 overflow-auto">
                 <RouterView/>
