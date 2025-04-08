@@ -10,11 +10,11 @@
                 </AspectRatio>
             </CardContent>
             <CardHeader class="pt-2 pb-4 px-4">
-                <CardTitle class="text-sm font-medium leading-tight line-clamp-2">{{
+                <CardTitle class="messages-sm font-medium leading-tight line-clamp-2">{{
                         suggestion.title
                     }}
                 </CardTitle>
-                <CardDescription class="text-xs mt-1 truncate">{{ suggestion.channelTitle }}</CardDescription>
+                <CardDescription class="messages-xs mt-1 truncate">{{ suggestion.channelTitle }}</CardDescription>
             </CardHeader>
         </a>
     </Card>

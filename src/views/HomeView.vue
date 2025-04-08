@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress'
 import { BrainCircuit, Moon, Snowflake, Sun, Utensils, Zap } from 'lucide-vue-next'
 import Suggestions from "@/components/suggestion/Suggestions.vue";
 import { searchYouTube } from "@/lib/suggestions.ts";
+import Tasks from "@/components/task/Tasks.vue";
 
 // --- Time & Greeting ---
 const time = new Date()
@@ -34,12 +35,12 @@ const energyMax = 100
 const energyProgress = computed(() => (energy.value / energyMax) * 100)
 const energyProgressColorClass = computed(() => {
     if (energyProgress.value >= 80) {
-        return 'text-green-500'
+        return 'messages-green-500'
     }
     if (energyProgress.value >= 50) {
-        return 'text-amber-500'
+        return 'messages-amber-500'
     }
-    return 'text-red-500'
+    return 'messages-red-500'
 })
 
 // --- Mock Mood/Activity Placeholder ---
@@ -59,18 +60,18 @@ const recipeSuggestions = ref(['Schnell', 'Gesund', 'Vegan', 'Hähnchen', 'Salat
         <!-- Header Section -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight">{{ greeting }}, Josef</h1>
-                <p class="text-muted-foreground">Hier sind einige Vorschläge für deinen Tag.</p>
+                <h1 class="messages-3xl font-bold tracking-tight">{{ greeting }}, Josef</h1>
+                <p class="messages-muted-foreground">Hier sind einige Vorschläge für deinen Tag.</p>
             </div>
-            <div class="flex items-center gap-4 text-sm text-muted-foreground shrink-0">
+            <div class="flex items-center gap-4 messages-sm messages-muted-foreground shrink-0">
                 <div class="flex items-center gap-2">
-                    <Sun v-if="!isNight" class="h-4 w-4 text-amber-500"/>
-                    <Moon v-else class="h-4 w-4 text-gray-500"/>
+                    <Sun v-if="!isNight" class="h-4 w-4 messages-amber-500"/>
+                    <Moon v-else class="h-4 w-4 messages-gray-500"/>
                     <span>{{ timeString }} Uhr</span>
                 </div>
                 <Separator orientation="vertical" class="h-4"/>
                 <div class="flex items-center gap-2">
-                    <Snowflake class="h-4 w-4 text-blue-400"/>
+                    <Snowflake class="h-4 w-4 messages-blue-400"/>
                     <span>{{ temperature }}°C</span>
                 </div>
             </div>
@@ -78,32 +79,20 @@ const recipeSuggestions = ref(['Schnell', 'Gesund', 'Vegan', 'Hähnchen', 'Salat
 
         <!-- Quick Stats Section -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-                <CardHeader class="pb-2">
-                    <CardTitle class="text-lg font-semibold">Stimmung Heute</CardTitle>
-                    <CardDescription>Wie fühlst du dich?</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div class="flex items-center gap-2 pt-2">
-                        <span class="text-2xl">😊</span>
-                        <Progress :model-value="moodProgress" class="w-full h-2" aria-label="Stimmung Fortschritt"/>
-                    </div>
-                    <p class="text-xs text-muted-foreground mt-2">Logge deine Stimmung für bessere Einsichten.</p>
-                </CardContent>
-            </Card>
+            <Tasks/>
 
             <Card>
                 <CardHeader class="pb-2">
-                    <CardTitle class="text-lg font-semibold">Energie-Level</CardTitle>
+                    <CardTitle class="messages-lg font-semibold">Energie-Level</CardTitle>
                     <CardDescription>Dein aktuelles Energielevel.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div class="flex items-center gap-2 pt-2">
                         <Zap :class="['h-5 w-5 shrink-0', energyProgressColorClass]"/>
-                        <Progress :model-value="energyProgress" class="w-full h-2" aria-label="Energie Fortschritt"/>
+                        <Progress :model_id-value="energyProgress" class="w-full h-2" aria-label="Energie Fortschritt"/>
                         <span :class="['font-semibold', energyProgressColorClass]">{{ energy }}%</span>
                     </div>
-                    <p class="text-xs text-muted-foreground mt-2">Basierend auf deinem letzten Log (oder Standard).</p>
+                    <p class="messages-xs messages-muted-foreground mt-2">Basierend auf deinem letzten Log (oder Standard).</p>
                 </CardContent>
             </Card>
         </div>
@@ -114,7 +103,7 @@ const recipeSuggestions = ref(['Schnell', 'Gesund', 'Vegan', 'Hähnchen', 'Salat
             <Suggestions title="Workouts Vorschläge" type="youtube" :search-function="searchYouTube"
                          :search-term-suggestions="workoutSuggestions">
                 <template #icon>
-                    <Zap class="h-6 w-6 text-red-500"/>
+                    <Zap class="h-6 w-6 messages-red-500"/>
                 </template>
             </Suggestions>
         </section>
@@ -125,7 +114,7 @@ const recipeSuggestions = ref(['Schnell', 'Gesund', 'Vegan', 'Hähnchen', 'Salat
             <Suggestions title="Meditation Vorschläge" type="youtube" :search-function="searchYouTube"
                          :search-term-suggestions="meditationSuggestions">
                 <template #icon>
-                    <BrainCircuit class="h-6 w-6 text-indigo-500"/>
+                    <BrainCircuit class="h-6 w-6 messages-indigo-500"/>
                 </template>
             </Suggestions>
         </section>
@@ -136,7 +125,7 @@ const recipeSuggestions = ref(['Schnell', 'Gesund', 'Vegan', 'Hähnchen', 'Salat
             <Suggestions title="Rezepte Vorschläge" type="youtube" :search-function="searchYouTube"
                          :search-term-suggestions="recipeSuggestions">
                 <template #icon>
-                    <Utensils class="h-6 w-6 text-green-500"/>
+                    <Utensils class="h-6 w-6 messages-green-500"/>
                 </template>
             </Suggestions>
         </section>

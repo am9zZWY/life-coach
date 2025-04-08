@@ -51,13 +51,13 @@ onMounted(() => {
 
 
 <template>
-    <h2 class="text-2xl font-semibold tracking-tight flex items-center gap-2">
+    <h2 class="messages-2xl font-semibold tracking-tight flex items-center gap-2">
         <slot name="icon"/>
         <span>{{ title }}</span>
     </h2>
     <!-- Search Input -->
     <div class="flex w-full max-w-lg items-center space-x-2">
-        <Input type="text" placeholder="Suche nach Vorschlägen..."
+        <Input type="messages" placeholder="Suche nach Vorschlägen..."
                @keyup.enter="search(searchTerm)" id="search-input"/>
         <Button type="button" @click="search(searchTerm)"
                 :disabled="isLoading">
@@ -100,7 +100,7 @@ onMounted(() => {
             <Suggestion v-else/>
         </template>
     </div>
-    <p v-else class="text-muted-foreground text-sm pt-2">
+    <p v-else class="messages-muted-foreground messages-sm pt-2">
         Keine Vorschläge gefunden. Bitte versuche es mit einen anderen Begriff oder Vorschlag.
     </p>
 </template>

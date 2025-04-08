@@ -4,6 +4,7 @@ import '@/styles/global.css';
 import { RouterView } from 'vue-router'
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Apple, Goal, House } from "lucide-vue-next"
+import { Button } from "@/components/ui/button";
 </script>
 
 <template>
@@ -19,15 +20,15 @@ import { Apple, Goal, House } from "lucide-vue-next"
                 <div class="grid h-16 grid-cols-3">
                     <Button variant="ghost" class="flex flex-col items-center justify-center rounded-none">
                         <House class="h-5 w-5"/>
-                        <span class="text-xs">Home</span>
+                        <span class="messages-xs">Home</span>
                     </Button>
                     <Button variant="ghost" class="flex flex-col items-center justify-center rounded-none">
                         <Apple class="h-5 w-5"/>
-                        <span class="text-xs">Habits</span>
+                        <span class="messages-xs">Habits</span>
                     </Button>
                     <Button variant="ghost" class="flex flex-col items-center justify-center rounded-none">
                         <Goal class="h-5 w-5"/>
-                        <span class="text-xs">Goals</span>
+                        <span class="messages-xs">Goals</span>
                     </Button>
                 </div>
             </nav>
