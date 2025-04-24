@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, toRefs } from 'vue'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Priority, type Task } from '@/models/task'
 import { useTaskStore } from '@/stores/task.ts'
+import { WandSparkles, X } from 'lucide-vue-next'
 
 const props = defineProps<{
   task: Task,
@@ -25,10 +26,10 @@ const isOverdue = computed(() => {
 
 // Format date to readable string
 const formatDate = (date: Date) => {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
+  return new Date(date).toLocaleDateString('de-DE', {
+    year: '2-digit',
+    month: '2-digit',
+    day: '2-digit'
   })
 }
 
@@ -109,36 +110,41 @@ const handleBreakDownTask = () => {
                    @click.prevent="toggleView">
           {{ task.title }}
         </CardTitle>
+
+        <Button
+          variant="outline"
+          size="sm"
+          class="messages-xs messages-muted-foreground hover:messages-primary"
+          :class="{ 'animate-pulse cursor-not-allowed': isBreakingDown }"
+          @click="handleBreakDownTask"
+        >
+          <WandSparkles />
+        </Button>
+        <Button
+          size="sm"
+          class="messages-xs messages-muted-foreground hover:messages-primary"
+          @click="taskStore.removeTask(task.id)"
+        >
+          <X />
+        </Button>
       </div>
-      <Badge :variant="getPriorityVariant(task.priority)">
-        {{ getPriorityLabel(task.priority) }}
-      </Badge>
+      <div class="flex flex-row space-x-1">
+        <Badge class="messages-xs messages-muted-foreground" :variant="getPriorityVariant(task.priority)">
+          {{ getPriorityLabel(task.priority) }}
+        </Badge>
+        <Badge class="messages-xs messages-muted-foreground">
+          {{ formatDate(task.createdDate) }}
+        </Badge>
+        <Badge v-if="task.dueDate" class="messages-xs"
+               :class="isOverdue ? 'messages-destructive' : 'messages-muted-foreground'">
+          {{ formatDate(task.dueDate) }}
+        </Badge>
+      </div>
     </CardHeader>
 
     <CardContent v-if="task.description" class="pb-2">
       <p class="messages-sm messages-muted-foreground">{{ task.description }}</p>
     </CardContent>
-
-    <CardFooter class="flex justify-between pt-0" v-if="(task.dueDate || task.createdDate) && expanded">
-      <div class="flex flex-col space-y-1">
-        <Badge class="messages-xs messages-muted-foreground">
-          Erstellt am: {{ formatDate(task.createdDate) }}
-        </Badge>
-        <Badge v-if="task.dueDate" class="messages-xs"
-               :class="isOverdue ? 'messages-destructive' : 'messages-muted-foreground'">
-          Fällig: {{ formatDate(task.dueDate) }}
-        </Badge>
-      </div>
-      <Button
-        variant="outline"
-        size="sm"
-        class="messages-xs messages-muted-foreground hover:messages-primary"
-        :class="{ 'animate-pulse cursor-not-allowed': isBreakingDown }"
-        @click="handleBreakDownTask"
-      >
-        Runterbrechen
-      </Button>
-    </CardFooter>
 
     <!-- Render subtasks recursively if they exist -->
     <div v-if="task.subTasks && task.subTasks.length > 0" class="pl-6 mt-2 border-l">
