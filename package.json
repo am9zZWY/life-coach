@@ -12,7 +12,6 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
-    "@huggingface/transformers": "^3.4.2",
     "@mlc-ai/web-llm": "^0.2.78",
     "@tailwindcss/vite": "^4.1.2",
     "@vueuse/core": "^13.0.0",
