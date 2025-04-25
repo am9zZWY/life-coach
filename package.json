@@ -12,13 +12,13 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
-    "@huggingface/transformers": "^3.4.2",
     "@mlc-ai/web-llm": "^0.2.78",
-    "@tailwindcss/vite": "^4.1.2",
+    "@tailwindcss/vite": "^4.1.4",
     "@vueuse/core": "^13.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-vue-next": "^0.487.0",
+    "lucide-vue-next": "^0.501.0",
+    "openai": "^4.96.0",
     "lz-string": "^1.5.0",
     "pinia": "^3.0.1",
     "qrcode.vue": "^3.6.0",
@@ -40,13 +40,9 @@
     "jsdom": "^26.0.0",
     "npm-run-all2": "^7.0.2",
     "typescript": "~5.8.0",
-    "vite": "^6.2.4",
+    "vite": "^6.3.2",
     "vite-plugin-vue-devtools": "^7.7.2",
     "vitest": "^3.1.1",
     "vue-tsc": "^2.2.8"
-  },
-  "trustedDependencies": [
-    "onnxruntime-node",
-    "protobufjs"
-  ]
+  }
 }

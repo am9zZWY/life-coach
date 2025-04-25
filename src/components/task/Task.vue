@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Priority, type Task } from '@/models/task'
 import { useTaskStore } from '@/stores/task.ts'
+import { Input } from '@/components/ui/input'
 import { WandSparkles, X } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -68,11 +69,6 @@ const getPriorityVariant = (priority: number): 'outline' | 'default' | 'destruct
   }
 }
 
-const expanded = ref(false)
-const toggleView = () => {
-  expanded.value = !expanded.value
-}
-
 // Toggle task completion
 const toggleTaskCompletion = () => {
   const updatedTask = {
@@ -106,9 +102,8 @@ const handleBreakDownTask = () => {
           :model-value="task.completed"
           @update:model-value="toggleTaskCompletion"
         />
-        <CardTitle class="cursor-pointer" :class="{ 'line-through messages-muted-foreground': task.completed }"
-                   @click.prevent="toggleView">
-          {{ task.title }}
+        <CardTitle class="cursor-pointer" :class="{ 'line-through messages-muted-foreground': task.completed }">
+          <Input v-model="task.title" />
         </CardTitle>
 
         <Button
@@ -128,6 +123,17 @@ const handleBreakDownTask = () => {
           <X />
         </Button>
       </div>
+      <Badge :variant="getPriorityVariant(task.priority)">
+        {{ getPriorityLabel(task.priority) }}
+      </Badge>
+    </CardHeader>
+
+    <CardContent v-if="task.description" class="pb-2">
+      <p class="messages-sm messages-muted-foreground">{{ task.description }}</p>
+    </CardContent>
+
+    <CardFooter class="flex justify-between pt-0" v-if="(task.dueDate || task.createdDate)">
+      <div class="flex flex-col space-y-1">
       <div class="flex flex-row space-x-1">
         <Badge class="messages-xs messages-muted-foreground" :variant="getPriorityVariant(task.priority)">
           {{ getPriorityLabel(task.priority) }}
