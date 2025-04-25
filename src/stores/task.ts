@@ -4,8 +4,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { type Task } from '@/models/task'
 import { v4 as uuidv4 } from 'uuid'
-import type { LLMConfig, TextGenerationInput } from '@/llm'
-import { useWebLLMTextGeneration } from '@/llm'
+import { useGpt } from '@/composables/llm/useGpt.ts'
 
 export const useTaskStore = defineStore('tasks', () => {
     // State
@@ -148,30 +147,16 @@ export const useTaskStore = defineStore('tasks', () => {
     async function llmBreakTaskIntoSubtasks(
       task: Task
     ) {
-      const initialConfig: LLMConfig = { model: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC', temperature: 0.8, top_p: 0.95 }
-      const { run } = useWebLLMTextGeneration(initialConfig)
-
-      const generatedText = ref('')
-
-
-      console.log('Starting generation...')
-      generatedText.value = ''
-      const generationInput: TextGenerationInput = [
-        {
-          role: 'system',
-          content: 'You are a task management assistant. Break tasks into smaller subtasks. You must ONLY return a valid JSON array of strings. Example input: "Clean house". Example output format: ["Clean kitchen", "Mop kitchen", "Clean bathroom", "Vacuum living room"]. DO NOT include any other text or explanations. DO NOT use markdown formatting. ONLY RETURN THE JSON ARRAY.'
-        },
-        {
-          role: 'user',
-          content: `Break this task into 3-5 subtasks. Return only a JSON array of strings.
+      const { run, systemPrompt } = useGpt()
+      systemPrompt.value = 'You are a task management assistant. Break tasks into smaller subtasks. You must ONLY return a valid JSON array of strings. Example input: "Clean house". Example output format: ["Clean kitchen", "Mop kitchen", "Clean bathroom", "Vacuum living room"]. DO NOT include any other text or explanations. DO NOT use markdown formatting. ONLY RETURN THE JSON ARRAY.'
+      const input = `Break this task into 3-5 subtasks. Return only a JSON array of strings.
     Task: ${task?.title}
     Description: ${task?.description ?? ''}`
-        }
-      ]
 
+      const output = ref('')
       try {
-        generatedText.value = await run(generationInput)
-        generatedText.value = generatedText.value
+        output.value = await run(input)
+        output.value = output.value
           // Remove empty lines
           .replace(/^\s*[\r\n]/gm, '')
           // Remove opening code block marker
@@ -184,10 +169,10 @@ export const useTaskStore = defineStore('tasks', () => {
           .replace(/^"(\[)/, '$1')
           // Remove trailing backtick and quote
           .replace(/(])[\s`"]*$/, '$1')
-        console.debug('Generated text:', generatedText.value)
+        console.debug('Generated text:', output.value)
 
         // Parse the generated text
-        const parsedResult = JSON.parse(generatedText.value)
+        const parsedResult = JSON.parse(output.value)
         // Update the task with the generated subtasks
         const subtasks = parsedResult.map((subtask: string) => ({
           title: subtask,
