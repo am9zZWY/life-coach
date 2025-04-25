@@ -26,7 +26,7 @@ export function useDB() {
   function get<T>(key: string): T | null {
     const value = localStorage.getItem(key)
     if (!value) {
-      console.warn(`No ${key} in cache`)
+      console.warn(`No ${key} in db`)
       return null
     }
     const uncompressed = decompress(value)

@@ -6,8 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 const taskStore = useTaskStore()
-const tasks = computed(() => taskStore.getTasks)
-const taskCount = computed(() => taskStore.getTotalTasks)
+const tasks = computed(() => taskStore.tasks)
+const taskCount = computed(() => taskStore.flatTasks.length)
 </script>
 
 
@@ -26,7 +26,7 @@ const taskCount = computed(() => taskStore.getTotalTasks)
       <Input
         type="messages"
         placeholder="Füge eine neue Aufgabe hinzu"
-        @keyup.enter="taskStore.addTaskFromName($event.target.value)"
+        @keyup.enter="taskStore.addFromTitle($event.target.value); $event.target.value = ''"
         class="mt-4"
       />
     </CardContent>

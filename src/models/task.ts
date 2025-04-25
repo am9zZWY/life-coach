@@ -8,6 +8,7 @@ export interface Task {
   priority: Priority;
   completed: boolean;
   subTasks: Task[];
+  parentId?: string;
 }
 
 export enum Priority {
