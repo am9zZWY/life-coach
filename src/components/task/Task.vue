@@ -7,16 +7,12 @@ import { Button } from '@/components/ui/button'
 import { Priority, type Task } from '@/models/task'
 import { useTaskStore } from '@/stores/task.ts'
 import { Input } from '@/components/ui/input'
+import { WandSparkles, X } from 'lucide-vue-next'
 
-const props = defineProps<{
-  task: Task,
-}>()
-
+const props = defineProps<{ task: Task }>()
 const { task } = toRefs(props)
-
 const taskStore = useTaskStore()
 
-// Check if task is overdue
 const isOverdue = computed(() => {
   if (!task.value.dueDate) {
     return false
@@ -24,16 +20,9 @@ const isOverdue = computed(() => {
   return new Date(task.value.dueDate) < new Date() && !props.task.completed
 })
 
-// Format date to readable string
-const formatDate = (date: Date) => {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
-}
+const formatDate = (date: Date) =>
+  new Date(date).toLocaleDateString('de-DE', { year: '2-digit', month: '2-digit', day: '2-digit' })
 
-// Get priority label based on priority number
 const getPriorityLabel = (priority: number) => {
   switch (priority) {
     case Priority.Low:
@@ -51,7 +40,6 @@ const getPriorityLabel = (priority: number) => {
   }
 }
 
-// Get badge variant based on priority
 const getPriorityVariant = (priority: number): 'outline' | 'default' | 'destructive' | 'secondary' => {
   switch (priority) {
     case Priority.Low:
@@ -68,13 +56,9 @@ const getPriorityVariant = (priority: number): 'outline' | 'default' | 'destruct
   }
 }
 
-// Toggle task completion
 const toggleTaskCompletion = () => {
-  const updatedTask = {
-    ...task.value,
-    completed: !task.value.completed
-  }
-  taskStore.updateTask(task.value.id, updatedTask)
+  const updatedTask = { ...task.value, completed: !task.value.completed }
+  taskStore.update(task.value.id, updatedTask)
 }
 
 const isBreakingDown = ref(false)
@@ -82,77 +66,110 @@ const handleBreakDownTask = () => {
   if (isBreakingDown.value) {
     return
   }
-
   isBreakingDown.value = true
   taskStore.llmBreakTaskIntoSubtasks(task.value)
-    .then(() => {
+    .finally(() => {
       isBreakingDown.value = false
-    }).catch(() => {
-    isBreakingDown.value = false
-  })
+    })
 }
 </script>
 
 <template>
-  <Card class="task-card shadow-none" :class="{ 'border-success': task.completed }">
-    <CardHeader class="flex flex-row items-center justify-between pb-2">
-      <div class="flex items-center space-x-2">
+  <Card
+    class="task-card transition-shadow hover:shadow-md border"
+    :class="{
+      'border-green-400 bg-green-50/30': task.completed,
+      'border-red-500/50': isOverdue && !task.completed
+    }"
+  >
+    <CardHeader class="flex flex-row items-start justify-between gap-2 pb-2">
+      <div class="flex items-center gap-3 flex-1 min-w-0">
         <Checkbox
           :model-value="task.completed"
           @update:model-value="toggleTaskCompletion"
+          class="mt-1"
         />
-        <CardTitle class="cursor-pointer" :class="{ 'line-through messages-muted-foreground': task.completed }">
-          <Input v-model="task.title" />
+        <CardTitle
+          class="flex-1 min-w-0 text-lg"
+          :class="{
+            'line-through text-muted-foreground': task.completed,
+            'font-semibold': !task.completed
+          }"
+        >
+          <Input
+            v-model="task.title"
+            class="bg-transparent border-none px-0 py-0 text-base font-medium truncate focus-visible:ring-0 focus-visible:outline-none"
+            :readonly="task.completed"
+          />
         </CardTitle>
       </div>
-      <Badge :variant="getPriorityVariant(task.priority)">
-        {{ getPriorityLabel(task.priority) }}
-      </Badge>
+      <div class="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          :disabled="isBreakingDown"
+          :class="{ 'animate-pulse': isBreakingDown }"
+          @click="handleBreakDownTask"
+          aria-label="Break down task into subtasks"
+        >
+          <WandSparkles class="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          @click="taskStore.remove(task.id)"
+          aria-label="Delete task"
+        >
+          <X class="w-4 h-4" />
+        </Button>
+      </div>
     </CardHeader>
 
-    <CardContent v-if="task.description" class="pb-2">
-      <p class="messages-sm messages-muted-foreground">{{ task.description }}</p>
+    <CardContent v-if="task.description" class="pb-2 pt-0">
+      <p class="text-sm text-muted-foreground">{{ task.description }}</p>
     </CardContent>
 
-    <CardFooter class="flex justify-between pt-0" v-if="(task.dueDate || task.createdDate)">
-      <div class="flex flex-col space-y-1">
-        <Badge class="messages-xs messages-muted-foreground">
-          Erstellt am: {{ formatDate(task.createdDate) }}
+    <CardFooter class="flex flex-col items-start pt-0 gap-2">
+      <div class="flex flex-wrap gap-2">
+        <Badge :variant="getPriorityVariant(task.priority)" class="text-xs">
+          {{ getPriorityLabel(task.priority) }}
         </Badge>
-        <Badge v-if="task.dueDate" class="messages-xs"
-               :class="isOverdue ? 'messages-destructive' : 'messages-muted-foreground'">
-          Fällig: {{ formatDate(task.dueDate) }}
+        <Badge variant="secondary" class="text-xs">
+          Created: {{ formatDate(task.createdDate) }}
+        </Badge>
+        <Badge
+          v-if="task.dueDate"
+          :variant="isOverdue ? 'destructive' : 'secondary'"
+          class="text-xs"
+        >
+          Due: {{ formatDate(task.dueDate) }}
         </Badge>
       </div>
-      <Button
-        variant="outline"
-        size="sm"
-        class="messages-xs messages-muted-foreground hover:messages-primary"
-        :class="{ 'animate-pulse cursor-not-allowed': isBreakingDown }"
-        @click="handleBreakDownTask"
-      >
-        Runterbrechen
-      </Button>
-    </CardFooter>
 
-    <!-- Render subtasks recursively if they exist -->
-    <div v-if="task.subTasks && task.subTasks.length > 0" class="pl-6 mt-2 border-l">
-      <Task
-        v-for="subTask in task.subTasks"
-        :key="subTask.id"
-        :task="subTask"
+      <!-- Recursive Subtasks Rendering -->
+      <div v-if="task.subTasks && task.subTasks.length > 0" class="w-full mt-2 space-y-2">
+        <Task
+          v-for="subTask in task.subTasks"
+          :key="subTask.id"
+          :task="subTask"
+          class="ml-4"
+        />
+
+      </div>
+
+      <Input
+        type="messages"
+        placeholder="Füge eine neue Aufgabe hinzu"
+        @keyup.enter="taskStore.addFromTitle($event.target.value, task.id); $event.target.value = ''"
+        class="mt-4"
       />
-    </div>
+    </CardFooter>
   </Card>
 </template>
 
 <style scoped>
 .task-card {
-  margin-bottom: 0.75rem;
-  transition: all 0.2s;
-}
-
-.task-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  margin-bottom: 1rem;
+  transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out, background 0.2s ease-in-out;
 }
 </style>

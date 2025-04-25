@@ -1,107 +1,110 @@
 // noinspection t
 
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
-import { type Task } from '@/models/task'
+import { computed, ref, watch } from 'vue'
+import { Priority, type Task } from '@/models/task'
 import { v4 as uuidv4 } from 'uuid'
 import { useGpt } from '@/composables/llm/useGpt.ts'
+import { useDB } from '@/composables/db.ts'
 
 export const useTaskStore = defineStore('tasks', () => {
-    // State
-    const tasks = ref<Task[]>([])
+    const db = useDB()
 
-    // Getters
-    const getTasks = computed(() => tasks.value)
-
-    const getTaskById = computed(() => {
-      return (id: string) => tasks.value.find(task => task.id === id)
-    })
-
-    const getCompletedTasks = computed(() => {
-      return tasks.value.filter(task => task.completed)
-    })
-
-    const getPendingTasks = computed(() => {
-      return tasks.value.filter(task => !task.completed)
-    })
-
-    const getTasksByPriority = computed(() => {
-      return (priority: number) => tasks.value.filter(task => task.priority === priority)
-    })
-    const getTotalTasks = computed(() => getAllTasks.value.length)
-    const getAllTasks = computed(() => getAllTasksR(tasks.value))
+    const tasks = ref<Task[]>(db.get('tasks') ?? [])
+    watch(tasks, () => {
+      console.warn('Tasks store changed')
+      db.set('tasks', tasks.value)
+    }, { deep: true })
+    const flatTasks = computed(() => getAllTasksR(tasks.value))
 
     function getAllTasksR(base: Task[]): Task[] {
       return [...base, ...base.flatMap(task => getAllTasksR(task.subTasks))]
     }
 
-    function addTaskFromName(taskName: string): string {
-      const newTask: Task = {
-        id: uuidv4(),
-        title: taskName,
-        description: '',
-        createdDate: new Date(),
-        dueDate: undefined,
-        priority: 3, // Default priority
-        completed: false,
-        subTasks: []
+    function get(taskId: string): Task | undefined {
+      function walk(list: Task[]): Task | undefined {
+        let task: Task | undefined = undefined
+        for (const t of list) {
+          if (t.id === taskId) {
+            task = t
+            break
+          }
+          task ??= walk(t.subTasks)
+        }
+        return task
       }
 
-      tasks.value.push(newTask)
-      return newTask.id
+      return walk(tasks.value)
     }
 
-    // Actions
-    function addTask(task: Omit<Task, 'id' | 'subTasks'> & { subTasks?: Task[] }): string {
+    function add(task: Omit<Task, 'id' | 'subTasks' | 'createdDate' | 'type'> & {
+      subTasks?: Task[]
+    }, parentId?: string): string {
       const newTask: Task = {
         id: uuidv4(),
         ...task,
+        type: 'Task',
         subTasks: task.subTasks || [],
-        createdDate: new Date() // Default to current date if not provided
+        createdDate: new Date(),
+        parentId: parentId ?? undefined
       }
 
-      tasks.value.push(newTask)
+      if (parentId) {
+        const parentTask = get(parentId)
+        parentTask?.subTasks.push(newTask)
+        update(parentId, { ...parentTask })
+      } else {
+        tasks.value.push(newTask)
+      }
       return newTask.id
     }
 
-    function removeTask(taskId: string): boolean {
+    function addFromTitle(title: string, parentId?: string) {
+      return add({
+        title: title,
+        completed: false,
+        priority: Priority.Medium
+      }, parentId)
+    }
+
+    function remove(taskId: string): boolean {
       const initialLength = tasks.value.length
       tasks.value = tasks.value.filter(task => task.id !== taskId)
+      if (tasks.value.length < initialLength) {
+        return true
+      }
 
-      // Also remove from subtasks if it exists there
-      tasks.value.forEach(task => {
-        task.subTasks = task.subTasks.filter(subTask => subTask.id !== taskId)
-      })
-
-      return tasks.value.length < initialLength
+      const task = get(taskId)
+      if (task === undefined || task === null) {
+        console.warn('Task not found')
+        return false
+      }
+      const parentTask = get(task.parentId!)
+      if (!parentTask) {
+        return false
+      }
+      const parentSubTasks = parentTask?.subTasks.filter(task => task.id !== taskId)
+      return update(task.parentId!, { ...parentTask, subTasks: parentSubTasks })
     }
 
-    function updateTask(taskId: string, updates: Partial<Omit<Task, 'id'>>): boolean {
-      const taskIndex = tasks.value.findIndex(task => task.id === taskId)
-
-      if (taskIndex === -1) {
+    function update(taskId: string, updates: Partial<Omit<Task, 'id'>>): boolean {
+      function walk(list: Task[]): boolean {
+        for (const t of list) {
+          if (t.id === taskId) {
+            Object.assign(t, updates)
+            return true
+          }
+          if (walk(t.subTasks)) {
+            return true
+          }
+        }
         return false
       }
 
-      tasks.value[taskIndex] = {
-        ...tasks.value[taskIndex],
-        ...updates
-      }
-
-      return true
+      return walk(tasks.value)
     }
 
-    function toggleTaskCompletion(taskId: string): boolean {
-      const task = tasks.value.find(t => t.id === taskId)
-      if (!task) {
-        return false
-      }
-
-      task.completed = !task.completed
-      return true
-    }
-
-    function sortTasks(sortBy: 'priority' | 'dueDate' | 'createdDate', ascending = true): void {
+    function sort(sortBy: 'priority' | 'dueDate' | 'createdDate', ascending = true): void {
       tasks.value.sort((a, b) => {
         if (sortBy === 'priority') {
           return ascending ? a.priority - b.priority : b.priority - a.priority
@@ -127,20 +130,12 @@ export const useTaskStore = defineStore('tasks', () => {
       taskId: string,
       subTasksToAdd: Array<Omit<Task, 'id' | 'subTasks'>>
     ): boolean {
-      const task = tasks.value.find(t => t.id === taskId)
-      if (!task) {
+      if (get(taskId) === undefined) {
+        console.warn('Task id not found in tasks')
         return false
       }
 
-      // Create new subtasks with IDs
-      const newSubTasks = subTasksToAdd.map(subTask => ({
-        id: uuidv4(),
-        ...subTask,
-        subTasks: [],
-        createdDate: new Date()
-      }))
-
-      task.subTasks.push(...newSubTasks)
+      subTasksToAdd.forEach(subTask => add(subTask, taskId))
       return true
     }
 
@@ -148,9 +143,8 @@ export const useTaskStore = defineStore('tasks', () => {
       task: Task
     ) {
       const { run, systemPrompt } = useGpt()
-      systemPrompt.value = 'You are a task management assistant. Break tasks into smaller subtasks. You must ONLY return a valid JSON array of strings. Example input: "Clean house". Example output format: ["Clean kitchen", "Mop kitchen", "Clean bathroom", "Vacuum living room"]. DO NOT include any other text or explanations. DO NOT use markdown formatting. ONLY RETURN THE JSON ARRAY.'
-      const input = `Break this task into 3-5 subtasks. Return only a JSON array of strings.
-    Task: ${task?.title}
+      systemPrompt.value = 'You are a task management assistant. Break tasks into up to 10 smaller subtasks. You must ONLY return a valid JSON array of strings. Example input: "Clean house". Example output format: ["Clean kitchen", "Mop kitchen", "Clean bathroom", "Vacuum living room"]. DO NOT include any other text or explanations. DO NOT use markdown formatting. ONLY RETURN THE JSON ARRAY.'
+      const input = `Task: ${task?.title}
     Description: ${task?.description ?? ''}`
 
       const output = ref('')
@@ -206,28 +200,14 @@ export const useTaskStore = defineStore('tasks', () => {
     }
 
     return {
-      // State
       tasks,
-
-      // Getters
-      getTasks,
-      getTaskById,
-      getCompletedTasks,
-      getPendingTasks,
-      getTasksByPriority,
-      getAllTasks,
-      getTotalTasks,
-
-      // Actions
-      addTask,
-      addTaskFromName,
-      removeTask,
-      updateTask,
-      toggleTaskCompletion,
-      sortTasks,
-      breakTaskIntoSubtasks,
-      llmBreakTaskIntoSubtasks,
-      moveSubtaskToMain
+      flatTasks,
+      add,
+      addFromTitle,
+      remove,
+      update,
+      sort,
+      llmBreakTaskIntoSubtasks
     }
   }
 )
