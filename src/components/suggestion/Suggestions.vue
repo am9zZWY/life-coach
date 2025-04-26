@@ -8,7 +8,7 @@ import { Search } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Suggestion from "@/components/suggestion/Suggestion.vue";
-import type { SuggestionModel, SuggestionType, YouTubeSuggestionModel } from "@/models/suggestions.ts";
+import type { SuggestionModel, SuggestionType, YouTubeSuggestionModel } from '@/models/suggestion.ts'
 
 type SuggestionsProps = {
     title: string;

@@ -299,7 +299,7 @@ const qrCode = useQRCode(dbEncoded)
             <ul class="list-disc pl-5">
               <li v-for="url in calendarIcsUrls" :key="url" class="flex items-center justify-between">
                 <span class="break-all">{{ url }}</span>
-                <Button variant="destructive" size="xs" @click="removeCalendar(url)">
+                <Button variant="destructive" size="sm" @click="removeCalendar(url)">
                   Entfernen
                 </Button>
               </li>
