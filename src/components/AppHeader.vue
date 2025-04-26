@@ -47,7 +47,7 @@ const { weather } = storeToRefs(weatherStore)
           <router-link to="/">{{ greeting }}, Josef</router-link>
         </h1>
       </div>
-      <div class="flex items-center gap-4 messages-sm messages-muted-foreground shrink-0">
+      <div class="flex gap-4 shrink-0">
         <div class="flex items-center gap-2">
           <Sun v-if="!isNight" class="h-4 w-4 messages-amber-500" />
           <Moon v-else class="h-4 w-4 messages-gray-500" />
