@@ -2,8 +2,10 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 
+const base = import.meta.env.DEV ? import.meta.env.BASE_URL : '/life-coach/'
+
 const router = createRouter({
-  history: createWebHashHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(base),
   routes: [
     {
       path: '/',
