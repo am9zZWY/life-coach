@@ -13,7 +13,10 @@ export const useGptStore = defineStore('gpt', () => {
     db.set('openai-key', apiKey)
   })
 
-  const personalInformation = ref<string>('')
+  const personalInformation = ref<string>(db.get('personalInformation') ?? '')
+  watch(personalInformation, (apiKey) => {
+    db.set('personalInformation', apiKey)
+  })
   const model = ref<Model>('gpt-4.1-nano')
 
   async function run(input: string, systemPrompt: string) {
