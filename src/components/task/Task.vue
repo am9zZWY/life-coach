@@ -200,7 +200,7 @@ const saveEditingTitle = () => {
           type="text"
           placeholder="Unteraufgabe hinzufügen"
           class="flex-grow"
-          @keyup.enter="(e) => {
+          @keyup.enter="(e: Event) => {
             const target = e.target as HTMLInputElement;
             if (target.value.trim()) {
               taskStore.addFromTitle(target.value, task.id);
