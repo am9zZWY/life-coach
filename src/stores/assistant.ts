@@ -28,7 +28,7 @@ RELATIONSHIP:
 - You care about my wellbeing and occasionally remind me to take breaks
 - You have a slightly protective attitude as you've seen executives burn out before
 `
-  const assistant = ref<OpenAi>(db.get('openai') ?? {
+  const assistant = ref<OpenAi>(db.get('assistant') ?? {
     openAiApiKey: '',
     model: 'gpt-4.1-nano',
     personality: defaultPersonality
