@@ -4,13 +4,13 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { Priority, type Task } from '@/models/task'
 import { v4 as uuidv4 } from 'uuid'
-import { useGptStore } from '@/stores/gpt.ts'
+import { useAssistant } from '@/stores/assistant.ts'
 import { useDB } from '@/composables/db.ts'
 import { useCalendarStore } from '@/stores/calendar.ts'
 
 export const useTaskStore = defineStore('tasks', () => {
     const db = useDB()
-    const gptStore = useGptStore()
+    const gptStore = useAssistant()
     const calendarStore = useCalendarStore()
 
     const tasks = ref<Task[]>(db.get('tasks') ?? [])
@@ -24,7 +24,11 @@ export const useTaskStore = defineStore('tasks', () => {
       return [...base, ...base.flatMap(task => getAllTasksR(task.subTasks))]
     }
 
-    function get(taskId: string): Task | undefined {
+    function get(taskId?: string): Task | undefined {
+      if (!taskId) {
+        return undefined
+      }
+
       function walk(list: Task[]): Task | undefined {
         let task: Task | undefined = undefined
         for (const t of list) {
@@ -145,13 +149,13 @@ export const useTaskStore = defineStore('tasks', () => {
     async function llmBreakTaskIntoSubtasks(
       task: Task
     ) {
-      const systemPrompt = 'You are a really thoughtful, efficient and personal task management assistant. Occasionally you are sarcastic but still nice. Break tasks into up to 5 smaller subtasks. You must ONLY return a valid JSON array of strings. Answer in the language of the user input. Example input: "Clean house". Example output format: ["Clean kitchen", "Mop kitchen", "Mop the dog", "Vacuum living room"]. DO NOT include any other text or explanations. DO NOT use markdown formatting. ONLY RETURN THE JSON ARRAY.'
-      const input = `Task: ${task?.title}
+      const systemPrompt = 'Break tasks into up to 5 smaller subtasks. You must ONLY return a valid JSON array of strings. Answer in the language of the user input. Example input: "Clean house". Example output format: ["Clean kitchen", "Mop kitchen", "Mop the dog", "Vacuum living room"]. DO NOT include any other text or explanations. DO NOT use markdown formatting. ONLY RETURN THE JSON ARRAY.'
+      const userPrompt = `Task: ${task?.title}
     Description: ${task?.description ?? ''}`
 
       const output = ref('')
       try {
-        output.value = await gptStore.run(input, systemPrompt)
+        output.value = await gptStore.run({ systemPrompt, userPrompt })
         output.value = output.value
           // Remove empty lines
           .replace(/^\s*[\r\n]/gm, '')
@@ -185,12 +189,12 @@ export const useTaskStore = defineStore('tasks', () => {
     }
 
     async function llmGenerateTasksFromCalendar() {
-      const systemPrompt = 'You are an extremely efficient and personal secretary. Occasionally you are sarcastic but still nice. Based on calendar events you should create 2-5 tasks that prepare the user for upcoming events. You must ONLY return a valid JSON array of strings. Answer in the language of the user input. Example input: "Meeting bzgl Thesis mit Jonas". Example output format: ["Todos ", "Computer laden"]. DO NOT include any other text or explanations. DO NOT use markdown formatting. ONLY RETURN THE JSON ARRAY.'
-      const input = calendarStore.toString()
+      const systemPrompt = 'Based on calendar events you should create 2-5 tasks that prepare the user for upcoming events. You must ONLY return a valid JSON array of strings. Answer in the language of the user userPrompt. Example userPrompt: "Meeting bzgl Thesis mit Jonas". Example output format: ["Todos ", "Computer laden"]. DO NOT include any other text or explanations. DO NOT use markdown formatting. ONLY RETURN THE JSON ARRAY.'
+      const userPrompt = calendarStore.toString()
 
       const output = ref('')
       try {
-        output.value = await gptStore.run(input, systemPrompt)
+        output.value = await gptStore.run({ systemPrompt, userPrompt })
         output.value = output.value
           // Remove empty lines
           .replace(/^\s*[\r\n]/gm, '')
@@ -232,9 +236,14 @@ export const useTaskStore = defineStore('tasks', () => {
       return false
     }
 
+    function toString() {
+      return flatTasks.value.map(task => `${task.title}:  ${task.description}, Due: ${task.dueDate}, parent of ${get(task.parentId)}`)
+    }
+
     return {
       tasks,
       flatTasks,
+      toString,
       add,
       addFromTitle,
       remove,

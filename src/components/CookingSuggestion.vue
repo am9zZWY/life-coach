@@ -40,9 +40,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { WandSparkles } from 'lucide-vue-next'
-import { useGptStore } from '@/stores/gpt.ts'
+import { useAssistant } from '@/stores/assistant.ts'
 
-const gptStore = useGptStore()
+const assistantStore = useAssistant()
 const cookingSuggestion = ref<string>('')
 const userPrompt = ref<string>('')
 const loading = ref(false)
@@ -57,7 +57,7 @@ const suggestRecipes = async () => {
   cookingSuggestion.value = ''
   loading.value = true
   try {
-    cookingSuggestion.value = await gptStore.run(userPrompt.value, systemPrompt)
+    cookingSuggestion.value = await assistantStore.run({ userPrompt: userPrompt.value, systemPrompt: systemPrompt })
   } catch (e) {
     error.value = 'Fehler beim Laden der Rezepte. Bitte versuche es erneut.'
   } finally {
