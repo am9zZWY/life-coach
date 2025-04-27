@@ -44,32 +44,38 @@ const { weather } = storeToRefs(weatherStore)
 
 <template>
   <header>
-    <nav class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <!-- Header Section -->
+    <nav class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <!-- Header Section with Greeting -->
       <div>
-        <h1 class="messages-3xl font-bold tracking-tight">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
           <router-link to="/">{{ greeting }}</router-link>
         </h1>
       </div>
-      <div class="flex gap-4 shrink-0">
-        <div class="flex items-center gap-2">
-          <Badge variant="outline">
-            <Sun v-if="!isNight" class="h-4 w-4 messages-amber-500" />
-            <Moon v-else class="h-4 w-4 messages-gray-500" />
-            {{ currentDate }} Uhr
-          </Badge>
-        </div>
-        <Separator orientation="vertical" class="h-4" />
-        <div class="flex items-center gap-2">
-          <Badge variant="secondary">
-            <ThermometerSun class="h-4 w-4 messages-blue-400" v-if="weather.temperature > 10" />
-            <ThermometerSnowflake class="h-4 w-4 messages-blue-400" v-if="weather.temperature < 10" />
-            {{ weather.temperature }}°C
-          </Badge>
-        </div>
-        <Separator orientation="vertical" class="h-4" />
-        <Button variant="ghost" @click="$router.push('/settings')">
-          <Settings />
+
+      <!-- Info Section (Date, Weather, Settings) -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-4 w-full md:w-auto">
+        <!-- Date Badge -->
+        <Badge variant="outline" class="flex items-center gap-1 py-1.5 px-2.5">
+          <Sun v-if="!isNight" class="h-4 w-4 text-amber-500" />
+          <Moon v-else class="h-4 w-4 text-gray-500" />
+          <span class="hidden sm:inline">{{ currentDate }} Uhr</span>
+          <span class="sm:hidden">{{ useDateFormat(useNow(), 'HH:mm') }} Uhr</span>
+        </Badge>
+
+        <Separator orientation="vertical" class="h-6 hidden sm:block" />
+
+        <!-- Weather Badge -->
+        <Badge variant="secondary" class="flex items-center gap-1 py-1.5 px-2.5">
+          <ThermometerSun class="h-4 w-4 text-blue-400" v-if="weather.temperature > 10" />
+          <ThermometerSnowflake class="h-4 w-4 text-blue-400" v-if="weather.temperature <= 10" />
+          {{ weather.temperature }}°C
+        </Badge>
+
+        <Separator orientation="vertical" class="h-6 hidden sm:block" />
+
+        <!-- Settings Button -->
+        <Button variant="ghost" size="sm" class="p-2" @click="$router.push('/settings')">
+          <Settings class="h-5 w-5" />
         </Button>
       </div>
     </nav>

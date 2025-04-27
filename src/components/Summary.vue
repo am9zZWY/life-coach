@@ -150,8 +150,8 @@ watch(flatTasks, () => generateSummary(true))
         <MessageSquareQuote />
         Une Note von Jean-Philippe
       </CardTitle>
-      <CardDescription class="flex items-center justify-between">
-        <div class="flex gap-2">
+      <CardDescription class="flex items-center justify-between flex-wrap gap-2 sm:gap-4 w-full md:w-auto">
+        <div class="flex flex-wrap gap-2">
           <Badge variant="outline">{{ currentDate }}</Badge>
           <Badge variant="secondary">{{ weatherStore.weather.temperature
             }}°C in {{ weatherStore.weather.location }}
