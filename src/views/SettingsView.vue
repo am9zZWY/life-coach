@@ -237,7 +237,7 @@ const dbEncoded = computed(() => db.toString())
       </Card>
 
       <!-- Apple Card -->
-      <Card>
+      <!-- <Card>
         <CardHeader class="space-y-1">
           <CardTitle class="flex items-center gap-2">
             <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple"
@@ -278,10 +278,10 @@ const dbEncoded = computed(() => db.toString())
             </Button>
           </form>
         </CardContent>
-      </Card>
+      </Card> -->
 
       <!-- ICS Settings Card -->
-      <Card>
+      <!-- <Card>
         <CardHeader class="space-y-1">
           <CardTitle class="flex items-center gap-2">
             <Cloud class="h-5 w-5 shrink-0" />
@@ -293,7 +293,6 @@ const dbEncoded = computed(() => db.toString())
         </CardHeader>
         <CardContent>
           <div class="space-y-6">
-            <!-- Add Calendar URL -->
             <form @submit.prevent="addCalendar" class="space-y-2">
               <Label for="calendarUrl">Kalender-URL (ICS)</Label>
               <div class="flex gap-2">
@@ -316,7 +315,6 @@ const dbEncoded = computed(() => db.toString())
 
             <Separator />
 
-            <!-- List of Calendar URLs -->
             <div v-if="calendarIcsUrls.length > 0" class="space-y-2">
               <Label>Deine Kalender:</Label>
               <ul class="space-y-2">
@@ -333,7 +331,7 @@ const dbEncoded = computed(() => db.toString())
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> -->
 
       <!-- Encoded Settings -->
       <Card>

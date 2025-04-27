@@ -3,8 +3,6 @@ import { useTaskStore } from '@/stores/task'
 import { computed, ref } from 'vue'
 import Task from '@/components/task/Task.vue'
 import { Input } from '@/components/ui/input'
-import { WandSparkles } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 const taskStore = useTaskStore()
@@ -37,8 +35,8 @@ const generateTasksFromCalendar = () => {
     </CardHeader>
     <CardContent class="overflow-y-auto px-3">
       <div>
-        <div v-for="task in tasks" :key="task.id">
-          <Task :task="task" />
+        <div class="tasks-list">
+          <Task v-for="task in tasks" :key="task.id" :task="task" />
         </div>
 
         <!-- Add new task button -->
@@ -52,3 +50,9 @@ const generateTasksFromCalendar = () => {
     </CardContent>
   </Card>
 </template>
+
+<style scoped>
+.tasks-list > :not(:last-child) {
+  @apply border-b;
+}
+</style>

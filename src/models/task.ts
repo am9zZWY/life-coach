@@ -2,7 +2,6 @@ export interface Task {
   id: string;
   type: 'Task' | 'Project',
   title: string;
-  description?: string;
   createdDate: Date;
   dueDate?: Date;
   priority: Priority;
