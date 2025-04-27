@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { BrainCircuit, Utensils, Zap } from 'lucide-vue-next'
+import Suggestions from '@/components/suggestion/Suggestions.vue'
+import { searchYouTube } from '@/lib/suggestions.ts'
 import Tasks from '@/components/task/Tasks.vue'
 import Calendar from '@/components/Calendar.vue'
 import { useTaskStore } from '@/stores/task.ts'
