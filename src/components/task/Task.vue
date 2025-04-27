@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, toRefs, watch } from 'vue'
 import { Priority, type Task } from '@/models/task'
-import { useTaskStore } from '@/stores/task.ts'
+import { useTaskStore } from '@/stores/task' // Fixed: removed ".ts" extension
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -10,6 +10,7 @@ import { CalendarIcon, Check, ChevronRight, WandSparkles, X } from 'lucide-vue-n
 import { useDateFormat } from '@vueuse/core'
 import { Calendar } from '@/components/ui/calendar'
 import { type DateValue } from 'reka-ui'
+import { Textarea } from '@/components/ui/textarea'
 
 const props = defineProps<{ task: Task }>()
 const { task } = toRefs(props)
@@ -18,8 +19,6 @@ const isCollapsed = ref(true)
 const isBreakingDown = ref(false)
 const editedTitle = ref('')
 const isEditingTitle = ref(false)
-const editedDescription = ref('')
-const isEditingDescription = ref(false)
 
 const isOverdue = computed(() =>
   task.value.dueDate && new Date(task.value.dueDate) < new Date() && !task.value.completed
@@ -30,7 +29,7 @@ watch(dueDateInput, () => {
   if (dueDateInput.value === undefined) {
     return
   }
-  task.value.dueDate = dueDateInput.value.toDate("Europe/Berlin")
+  task.value.dueDate = dueDateInput.value.toDate('Europe/Berlin')
 })
 const dueDate = computed(() => useDateFormat(task.value.dueDate, 'D. MMMM YYYY'))
 
@@ -77,30 +76,18 @@ const saveEditingTitle = () => {
   }
   isEditingTitle.value = false
 }
-
-const startEditingDescription = () => {
-  editedDescription.value = task.value.description ?? ''
-  isEditingDescription.value = true
-}
-
-const saveEditingDescription = () => {
-  if (editedDescription.value.trim()) {
-    taskStore.update(task.value.id, { ...task.value, description: editedDescription.value })
-  }
-  isEditingDescription.value = false
-}
 </script>
 
 <template>
-  <div class="border-b">
+  <div>
     <!-- Main task row -->
     <div class="flex items-center py-1 gap-3 group">
       <Checkbox
-        :checked="task.completed"
-        @update:checked="toggleTaskCompletion"
+        :model-value="task.completed"
+        @update:model-value="toggleTaskCompletion"
       />
 
-      <Input
+      <Textarea
         v-if="isEditingTitle"
         v-model="editedTitle"
         type="text"
@@ -108,30 +95,16 @@ const saveEditingDescription = () => {
         class="flex-grow"
         @keyup.enter="saveEditingTitle"
         @blur="saveEditingTitle"
+        autoFocus
       />
       <span
         v-else
-        class="flex-grow truncate"
-        :class="{ 'line-through text-muted-foreground': task.completed }"
+        class="flex-grow truncate cursor-pointer"
+        :class="{ 'line-through text-muted-foreground': task.completed, 'text-red-500': isOverdue }"
         @dblclick="startEditingTitle"
       >
         {{ task.title }}
       </span>
-
-      <Popover>
-        <PopoverTrigger as-child>
-          <Button
-            variant="outline"
-            class="w-[280px] justify-start text-left font-normal"
-          >
-            <CalendarIcon class="mr-2 h-4 w-4" />
-            {{ task.dueDate ? dueDate : 'Pick a date' }}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent class="w-auto p-0">
-          <Calendar v-model="dueDateInput" initial-focus />
-        </PopoverContent>
-      </Popover>
 
       <!-- Action buttons - desktop only -->
       <div class="hidden md:flex items-center gap-1">
@@ -173,7 +146,7 @@ const saveEditingDescription = () => {
 
     <!-- Details section - only visible when expanded -->
     <div v-if="!isCollapsed" class="border-t py-2 space-y-3">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-wrap items-center justify-between">
         <!-- Mobile action buttons -->
         <div class="flex md:hidden gap-2">
           <Button
@@ -198,28 +171,26 @@ const saveEditingDescription = () => {
           </Button>
         </div>
 
-        <!-- Description if exists -->
-        <Input
-          v-if="isEditingDescription || !task.description"
-          v-model="editedDescription"
-          type="text"
-          placeholder="Beschreibung hinzufügen"
-          class="flex-grow"
-          @keyup.enter="saveEditingDescription"
-          @blur="saveEditingDescription"
-        />
-        <p
-          v-else
-          class="text-muted-foreground"
-          @dblclick="startEditingDescription"
-        >
-          {{ task.description }}
-        </p>
+        <Popover>
+          <PopoverTrigger as-child>
+            <Button
+              variant="outline"
+              class="justify-start text-left font-normal"
+              :class="{ 'text-red-500': isOverdue }"
+            >
+              <CalendarIcon class="mr-2 h-4 w-4" />
+              {{ task.dueDate ? dueDate : 'Enddatum wählen' }}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent class="w-auto p-0">
+            <Calendar v-model="dueDateInput" initial-focus />
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div v-if="task.subTasks?.length" class="space-y-2 mt-2">
-        <div v-for="subTask in task.subTasks" :key="subTask.id">
-          <Task :task="subTask" />
+        <div class="tasks-list">
+          <Task v-for="subTask in task.subTasks" :key="subTask.id" :task="subTask" />
         </div>
       </div>
 
@@ -229,16 +200,24 @@ const saveEditingDescription = () => {
           type="text"
           placeholder="Unteraufgabe hinzufügen"
           class="flex-grow"
-          @keyup.enter="($event.target as HTMLInputElement).value &&
-            taskStore.addFromTitle(($event.target as HTMLInputElement).value, task.id);
-            ($event.target as HTMLInputElement).value = ''"
+          @keyup.enter="(e) => {
+            const target = e.target as HTMLInputElement;
+            if (target.value.trim()) {
+              taskStore.addFromTitle(target.value, task.id);
+              target.value = '';
+            }
+          }"
         />
         <Button
           variant="outline"
           size="icon"
-          @click="($event.target.previousElementSibling as HTMLInputElement).value &&
-            taskStore.addFromTitle(($event.target.previousElementSibling as HTMLInputElement).value, task.id);
-            ($event.target.previousElementSibling as HTMLInputElement).value = ''"
+          @click="(e) => {
+            const input = e.target.previousElementSibling as HTMLInputElement;
+            if (input.value.trim()) {
+              taskStore.addFromTitle(input.value, task.id);
+              input.value = '';
+            }
+          }"
         >
           <Check class="h-4 w-4" />
         </Button>
@@ -247,9 +226,12 @@ const saveEditingDescription = () => {
   </div>
 </template>
 
-
 <style scoped>
 .task-card:hover .opacity-0 {
   @apply opacity-100;
+}
+
+.tasks-list > :not(:last-child) {
+  @apply border-b;
 }
 </style>

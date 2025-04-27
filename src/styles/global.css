@@ -121,3 +121,25 @@
         @apply bg-background text-foreground;
     }
 }
+
+
+.loader {
+    height: 50px;
+    aspect-ratio: 2;
+    border: 10px solid #fff;
+    box-sizing: border-box;
+    background: radial-gradient(farthest-side, #000 98%, #fff) left/20px 20px,
+    radial-gradient(farthest-side, #000 98%, #fff) left/20px 20px,
+    radial-gradient(farthest-side, #000 98%, #fff) center/20px 20px,
+    radial-gradient(farthest-side, #000 98%, #fff) right/20px 20px,
+    #fff;
+    background-repeat: no-repeat;
+    filter: blur(4px) contrast(10);
+    animation: loading 1s infinite;
+}
+
+@keyframes loading {
+    100% {
+        background-position: right, left, center, right
+    }
+}

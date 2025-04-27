@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { useAssistant } from '@/stores/assistant.ts'
 import { useDB } from '@/composables/db.ts'
 import { useCalendarStore } from '@/stores/calendar.ts'
+import task from '@/components/task/Task.vue'
 
 export const useTaskStore = defineStore('tasks', () => {
     const db = useDB()
@@ -133,25 +134,11 @@ export const useTaskStore = defineStore('tasks', () => {
       })
     }
 
-    function breakTaskIntoSubtasks(
-      taskId: string,
-      subTasksToAdd: Array<Omit<Task, 'id' | 'subTasks'>>
-    ): boolean {
-      if (get(taskId) === undefined) {
-        console.warn('Task id not found in tasks')
-        return false
-      }
-
-      subTasksToAdd.forEach(subTask => add(subTask, taskId))
-      return true
-    }
-
     async function llmBreakTaskIntoSubtasks(
       task: Task
     ) {
       const systemPrompt = 'Break tasks into up to 5 smaller subtasks. You must ONLY return a valid JSON array of strings. Answer in the language of the user input. Example input: "Clean house". Example output format: ["Clean kitchen", "Mop kitchen", "Mop the dog", "Vacuum living room"]. DO NOT include any other text or explanations. DO NOT use markdown formatting. ONLY RETURN THE JSON ARRAY.'
-      const userPrompt = `Task: ${task?.title}
-    Description: ${task?.description ?? ''}`
+      const userPrompt = `Task Title: ${task?.title}`
 
       const output = ref('')
       try {
@@ -172,17 +159,17 @@ export const useTaskStore = defineStore('tasks', () => {
         console.debug('Generated text:', output.value)
 
         // Parse the generated text
-        const parsedResult = JSON.parse(output.value)
+        const parsedResult = JSON.parse(output.value) as string[]
         // Update the task with the generated subtasks
-        const subtasks = parsedResult.map((subtask: string) => ({
-          title: subtask,
-          description: '',
-          completed: false,
-          dueDate: new Date(),
-          createdDate: new Date(),
-          priority: 2
-        }))
-        breakTaskIntoSubtasks(task.id, subtasks)
+        parsedResult.forEach((subTask: string) => {
+          add({
+            title: subTask,
+            completed: false,
+            dueDate: task.dueDate,
+            priority: 2,
+            parentId: task.id
+          }, task.id)
+        })
       } catch (e: any) {
         console.error('Generation failed:', e)
       }
@@ -240,7 +227,6 @@ export const useTaskStore = defineStore('tasks', () => {
       return flatTasks.value.map(task =>
         [
           `Task Title: ${task.title}`,
-          `Description: ${task.description ?? ''}`,
           `Due Date: ${task.dueDate ?? 'no deadline'}`,
           `Parent Task: ${get(task.parentId)?.title ?? 'none'}`,
           `Completed: ${task.completed ? 'yes' : 'no'}`
