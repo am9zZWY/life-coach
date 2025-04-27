@@ -4,8 +4,9 @@ import { useAssistant } from '@/stores/assistant.ts'
 import { useTaskStore } from '@/stores/task.ts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useWeatherStore } from '@/stores/weather.ts'
-import { format } from 'date-fns'
 import { useDB } from '@/composables/db.ts'
+import { useDateFormat } from '@vueuse/core'
+import { Badge } from '@/components/ui/badge'
 
 const gptStore = useAssistant()
 const weatherStore = useWeatherStore()
@@ -13,7 +14,7 @@ const taskStore = useTaskStore()
 
 const summary = ref('')
 const loading = ref(false)
-const currentDate = format(new Date(), 'EEEE, MMMM d, yyyy')
+const currentDate = useDateFormat(new Date(), 'dddd, D. MMMM YYYY')
 
 const systemPrompt = `FORMATTING:
 - You answer in plain text, no Markdown allowed, no stars, no headers
@@ -88,9 +89,9 @@ onMounted(() => {
         A Note From Jean-Philippe
       </CardTitle>
       <CardDescription class="flex items-center gap-2">
-        <span>{{ currentDate }}</span>
-        <span class="text-xs px-2 py-1 rounded-full bg-muted">{{ weatherStore.weather.temperature
-          }}°C in {{ weatherStore.weather.location }}</span>
+        <Badge variant="outline">{{ currentDate }}</Badge>
+        <Badge variant="secondary">{{ weatherStore.weather.temperature
+          }}°C in {{ weatherStore.weather.location }}</Badge>
       </CardDescription>
     </CardHeader>
     <CardContent>
