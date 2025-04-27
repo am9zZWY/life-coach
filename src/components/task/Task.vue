@@ -1,26 +1,38 @@
 <script setup lang="ts">
-import { computed, ref, toRefs } from 'vue'
+import { computed, ref, toRefs, watch } from 'vue'
 import { Priority, type Task } from '@/models/task'
 import { useTaskStore } from '@/stores/task.ts'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
-import { Check, ChevronRight, WandSparkles, X } from 'lucide-vue-next'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { CalendarIcon, Check, ChevronRight, WandSparkles, X } from 'lucide-vue-next'
+import { useDateFormat } from '@vueuse/core'
+import { Calendar } from '@/components/ui/calendar'
+import { type DateValue } from 'reka-ui'
 
 const props = defineProps<{ task: Task }>()
 const { task } = toRefs(props)
 const taskStore = useTaskStore()
 const isCollapsed = ref(true)
 const isBreakingDown = ref(false)
-const isEditing = ref(false)
 const editedTitle = ref('')
+const isEditingTitle = ref(false)
+const editedDescription = ref('')
+const isEditingDescription = ref(false)
 
 const isOverdue = computed(() =>
   task.value.dueDate && new Date(task.value.dueDate) < new Date() && !task.value.completed
 )
 
-const formatDate = (date: Date) =>
-  new Date(date).toLocaleDateString('de-DE', { year: '2-digit', month: '2-digit', day: '2-digit' })
+const dueDateInput = ref<DateValue>()
+watch(dueDateInput, () => {
+  if (dueDateInput.value === undefined) {
+    return
+  }
+  task.value.dueDate = dueDateInput.value.toDate("Europe/Berlin")
+})
+const dueDate = computed(() => useDateFormat(task.value.dueDate, 'D. MMMM YYYY'))
 
 const getPriorityVariant = (priority: number) => {
   switch (priority) {
@@ -54,48 +66,75 @@ const handleBreakDownTask = () => {
   })
 }
 
-const startEditing = () => {
+const startEditingTitle = () => {
   editedTitle.value = task.value.title
-  isEditing.value = true
+  isEditingTitle.value = true
 }
 
-const saveEditing = () => {
+const saveEditingTitle = () => {
   if (editedTitle.value.trim()) {
     taskStore.update(task.value.id, { ...task.value, title: editedTitle.value })
   }
-  isEditing.value = false
+  isEditingTitle.value = false
+}
+
+const startEditingDescription = () => {
+  editedDescription.value = task.value.description ?? ''
+  isEditingDescription.value = true
+}
+
+const saveEditingDescription = () => {
+  if (editedDescription.value.trim()) {
+    taskStore.update(task.value.id, { ...task.value, description: editedDescription.value })
+  }
+  isEditingDescription.value = false
 }
 </script>
 
 <template>
   <div class="border-b">
-    <!-- Main task row - clean and minimal -->
-    <div class="flex items-center px-4 py-1 gap-3 group">
+    <!-- Main task row -->
+    <div class="flex items-center py-1 gap-3 group">
       <Checkbox
         :checked="task.completed"
         @update:checked="toggleTaskCompletion"
       />
 
       <Input
-        v-if="isEditing"
+        v-if="isEditingTitle"
         v-model="editedTitle"
         type="text"
         placeholder="Aufgabe bearbeiten"
         class="flex-grow"
-        @keyup.enter="saveEditing"
-        @blur="saveEditing"
+        @keyup.enter="saveEditingTitle"
+        @blur="saveEditingTitle"
       />
       <span
         v-else
         class="flex-grow truncate"
         :class="{ 'line-through text-muted-foreground': task.completed }"
-        @dblclick="startEditing"
+        @dblclick="startEditingTitle"
       >
         {{ task.title }}
       </span>
 
-      <!-- Action buttons - shown on hover -->
-      <div class="flex items-center gap-1">
+      <Popover>
+        <PopoverTrigger as-child>
+          <Button
+            variant="outline"
+            class="w-[280px] justify-start text-left font-normal"
+          >
+            <CalendarIcon class="mr-2 h-4 w-4" />
+            {{ task.dueDate ? dueDate : 'Pick a date' }}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent class="w-auto p-0">
+          <Calendar v-model="dueDateInput" initial-focus />
+        </PopoverContent>
+      </Popover>
+
+      <!-- Action buttons - desktop only -->
+      <div class="hidden md:flex items-center gap-1">
         <Button
           variant="ghost"
           size="sm"
@@ -133,11 +172,50 @@ const saveEditing = () => {
     </div>
 
     <!-- Details section - only visible when expanded -->
-    <div v-if="!isCollapsed" class="border-t px-4 py-3 space-y-3">
-      <!-- Description if exists -->
-      <p v-if="task.description" class="text-muted-foreground text-sm">
-        {{ task.description }}
-      </p>
+    <div v-if="!isCollapsed" class="border-t py-2 space-y-3">
+      <div class="flex items-center justify-between">
+        <!-- Mobile action buttons -->
+        <div class="flex md:hidden gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-8 w-8"
+            :disabled="isBreakingDown"
+            :class="{ 'animate-pulse': isBreakingDown }"
+            @click="handleBreakDownTask"
+            title="Break down task"
+          >
+            <WandSparkles class="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-8 w-8"
+            @click="taskStore.remove(task.id)"
+            title="Delete task"
+          >
+            <X class="h-4 w-4" />
+          </Button>
+        </div>
+
+        <!-- Description if exists -->
+        <Input
+          v-if="isEditingDescription || !task.description"
+          v-model="editedDescription"
+          type="text"
+          placeholder="Beschreibung hinzufügen"
+          class="flex-grow"
+          @keyup.enter="saveEditingDescription"
+          @blur="saveEditingDescription"
+        />
+        <p
+          v-else
+          class="text-muted-foreground"
+          @dblclick="startEditingDescription"
+        >
+          {{ task.description }}
+        </p>
+      </div>
 
       <div v-if="task.subTasks?.length" class="space-y-2 mt-2">
         <div v-for="subTask in task.subTasks" :key="subTask.id">
