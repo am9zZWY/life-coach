@@ -11,8 +11,10 @@ import { Badge } from '@/components/ui/badge'
 
 // --- Time & Greeting ---
 const timestamp = useTimestamp({ offset: 0, interval: 1000 })
+const now = useNow({ interval: 1000 * 60 })
 const date = computed(() => new Date(timestamp.value))
-const currentDate = useDateFormat(useNow({ interval: 1000 * 60 }), 'dddd, D. MMMM YYYY, HH:mm')
+const currentTime = useDateFormat(now, 'HH:mm')
+const currentDate = useDateFormat(now, 'dddd, D. MMMM YYYY, HH:mm')
 const isNight = computed(() => {
   return (date.value.getHours() >= 18 || date.value.getHours() < 6)
 })
@@ -59,7 +61,7 @@ const { weather } = storeToRefs(weatherStore)
           <Sun v-if="!isNight" class="h-4 w-4 text-amber-500" />
           <Moon v-else class="h-4 w-4 text-gray-500" />
           <span class="hidden sm:inline">{{ currentDate }} Uhr</span>
-          <span class="sm:hidden">{{ useDateFormat(useNow(), 'HH:mm') }} Uhr</span>
+          <span class="sm:hidden">{{ currentTime }} Uhr</span>
         </Badge>
 
         <Separator orientation="vertical" class="h-6 hidden sm:block" />
