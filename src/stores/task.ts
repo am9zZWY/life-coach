@@ -236,9 +236,18 @@ export const useTaskStore = defineStore('tasks', () => {
       return false
     }
 
-    function toString() {
-      return flatTasks.value.map(task => `${task.title}:  ${task.description}, Due: ${task.dueDate}, parent of ${get(task.parentId)}`)
+    function toString(): string {
+      return flatTasks.value.map(task =>
+        [
+          `Task Title: ${task.title}`,
+          `Description: ${task.description ?? ''}`,
+          `Due Date: ${task.dueDate ?? 'no deadline'}`,
+          `Parent Task: ${get(task.parentId)?.title ?? 'none'}`,
+          `Completed: ${task.completed ? 'yes' : 'no'}`
+        ].join('\n')
+      ).join('\n\n---\n\n')
     }
+
 
     return {
       tasks,
