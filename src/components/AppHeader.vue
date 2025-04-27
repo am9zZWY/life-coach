@@ -6,6 +6,7 @@ import { useWeatherStore } from '@/stores/weather.ts'
 import { storeToRefs } from 'pinia'
 import { useTimestamp } from '@vueuse/core'
 import { Separator } from '@/components/ui/separator'
+import { useUserStore } from '@/stores/user.ts'
 
 // --- Time & Greeting ---
 const timestamp = useTimestamp({ offset: 0, interval: 1000 })
@@ -20,17 +21,24 @@ const isNight = computed(() => {
   return (date.value.getHours() >= 18 || date.value.getHours() < 6)
 })
 
+const userStore = useUserStore()
 const greeting = computed(() => {
   const hour = date.value.getHours()
+  let g = ''
   if (isNight.value) {
-    return 'Guten Abend'
+    g += 'Guten Abend'
   } else if (hour >= 6 && hour < 12) {
-    return 'Guten Morgen'
+    g +=  'Guten Morgen'
   } else if (hour >= 12 && hour < 18) {
-    return 'Guten Tag'
+    g +=  'Guten Tag'
   } else {
-    return 'Guten Abend'
+    g +=  'Guten Abend'
   }
+
+  if (userStore.user.name !== '') {
+    g += `, ${userStore.user.name}`
+  }
+  return g
 })
 
 // --- Mock Weather ---
@@ -44,7 +52,7 @@ const { weather } = storeToRefs(weatherStore)
       <!-- Header Section -->
       <div>
         <h1 class="messages-3xl font-bold tracking-tight">
-          <router-link to="/">{{ greeting }}, Josef</router-link>
+          <router-link to="/">{{ greeting }}</router-link>
         </h1>
       </div>
       <div class="flex items-center gap-4 messages-sm messages-muted-foreground shrink-0">

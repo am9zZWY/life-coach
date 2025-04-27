@@ -58,7 +58,7 @@ onMounted(() => {
     <!-- Search Input -->
     <div class="flex w-full max-w-lg items-center space-x-2">
         <Input type="messages" placeholder="Suche nach Vorschlägen..."
-               @keyup.enter="search(searchTerm)" id="search-input"/>
+               @keyup.enter="search(searchTerm)" id="search-userPrompt"/>
         <Button type="button" @click="search(searchTerm)"
                 :disabled="isLoading">
             <Search class="h-4 w-4 mr-2"/>
