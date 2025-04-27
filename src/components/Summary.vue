@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useAssistant } from '@/stores/assistant.ts'
 import { useTaskStore } from '@/stores/task.ts'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { useWeatherStore } from '@/stores/weather.ts'
 import { useDB } from '@/composables/db.ts'
 import { useDateFormat } from '@vueuse/core'
@@ -25,10 +25,13 @@ const timeOfDay = computed(() => {
   if (hour >= 5 && hour < 11) {
     return 'morning'
   }
-  if (hour >= 11 && hour < 15) {
+  if (hour >= 11 && hour < 13) {
     return 'lunch'
   }
-  if (hour >= 17 && hour < 23) {
+  if (hour >= 13 && hour < 18) {
+    return 'afternoon'
+  }
+  if (hour >= 18 && hour < 23) {
     return 'evening'
   }
   return 'night'
@@ -38,14 +41,9 @@ const systemPrompt = computed(() => `FORMATIERUNG:
 - Du antwortest in einfachem Text, kein Markdown erlaubt, keine Sternchen, keine Überschriften
 - Du verwendest gelegentlich Emojis, aber sparsam und geschmackvoll
 - Du sprichst mich immer direkt an, als ob wir ein Gespräch führen
-- Du antwortest IMMER auf Deutsch und gelegentlich mischt du ein zwei französischen Phrasen!
+- Du antwortest IMMER auf Deutsch und mischst gelegentlich ein oder zwei französische Phrasen ein
 - Du unterschreibst mit "- Jean-Philippe" und gelegentlich einer kurzen französischen Phrase
-
-FORMATIERUNG:
-- Du antwortest in einfachem Text, kein Markdown erlaubt, keine Sternchen, keine Überschriften!
-- Du verwendest gelegentlich Emojis, aber sparsam und geschmackvoll
-- Du sprichst mich immer direkt an, als ob wir ein Gespräch führen
-- Du unterschreibst mit "- Jean-Philippe" und gelegentlich einer kurzen französischen Phrase
+- Du hast die Gabe, genau zu wissen, wann du genug gesagt hast und hältst dich stets angenehm kurz
 
 CURRENT MODE: ${timeOfDay.value.toUpperCase()}
 `)
@@ -78,6 +76,18 @@ Es ist Mittagszeit, und ich könnte deine kulinarische Expertise gebrauchen. Bit
 3. Ergänze eine kurze Notiz zu meinem Nachmittagsplan
 
 ${tasksContext}`
+
+    case 'afternoon':
+      return `Bon après-midi! ${baseContext}
+
+Es ist Nachmittag – Zeit für eine kleine Stärkung oder eine kreative Pause. Bitte:
+1. Empfiehl mir einen raffinierten, aber unkomplizierten Snack oder ein Getränk, das am Nachmittag typisch ist und deinem französischen Geschmack entspricht
+2. Teile einen charmanten kulturellen Einblick oder eine französische Tradition, warum dieser Snack oder dieses Getränk am Nachmittag besonders geschätzt wird
+3. Gib mir eine inspirierende, aber diskrete Notiz, die meinen Nachmittag mit Esprit und Effizienz begleitet
+4. Zeige mir bitte zwei bis drei praxiserprobte Tipps aus deiner Erfahrung, wie ich meine heutigen ToDos nach Priorität ordnen und souverän erledigen kann
+
+${tasksContext}`
+
 
     case 'evening':
       return `Bonsoir! ${baseContext}
@@ -157,9 +167,6 @@ watch(flatTasks, () => generateSummary(true))
             }}°C in {{ weatherStore.weather.location }}
           </Badge>
         </div>
-        <Button @click="() => generateSummary(true)" variant="outline" size="sm">
-          <RotateCcw />
-        </Button>
       </CardDescription>
     </CardHeader>
     <CardContent>
@@ -176,5 +183,10 @@ watch(flatTasks, () => generateSummary(true))
         <div class="prose dark:prose-invert max-w-none" v-html="summary"></div>
       </div>
     </CardContent>
+    <CardFooter>
+      <Button @click="() => generateSummary(true)" variant="outline" size="sm">
+        <RotateCcw />
+      </Button>
+    </CardFooter>
   </Card>
 </template>

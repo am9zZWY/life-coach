@@ -5,6 +5,7 @@ import Task from '@/components/task/Task.vue'
 import { Input } from '@/components/ui/input'
 import { WandSparkles } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 const taskStore = useTaskStore()
 const tasks = computed(() => taskStore.tasks)
@@ -25,29 +26,29 @@ const generateTasksFromCalendar = () => {
 
 
 <template>
-  <div>
-    <div class="flex items-center gap-1">
-      <Button
-        variant="ghost"
-        size="icon"
-        :disabled="isGenerating"
-        :class="{ 'animate-pulse': isGenerating }"
-        @click="generateTasksFromCalendar"
-        aria-label="Break down task into subtasks"
-      >
-        <WandSparkles class="w-4 h-4" />
-      </Button>
-    </div>
-    <div v-for="task in tasks" :key="task.id">
-      <Task :task="task" />
-    </div>
+  <Card class="shadow-md rounded-xl">
+    <CardHeader class="pb-2">
+      <div class="flex justify-between items-center">
+        <CardTitle class="font-semibold text-lg">Aufgaben</CardTitle>
+        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                {{ taskCount }}
+              </span>
+      </div>
+    </CardHeader>
+    <CardContent class="overflow-y-auto px-3">
+      <div>
+        <div v-for="task in tasks" :key="task.id">
+          <Task :task="task" />
+        </div>
 
-    <!-- Add new task button -->
-    <Input
-      type="messages"
-      placeholder="Füge eine neue Aufgabe hinzu"
-      @keyup.enter="taskStore.addFromTitle($event.target.value); $event.target.value = ''"
-      class="mt-4"
-    />
-  </div>
+        <!-- Add new task button -->
+        <Input
+          type="text"
+          placeholder="Füge eine neue Aufgabe hinzu"
+          @keyup.enter="taskStore.addFromTitle($event.target.value); $event.target.value = ''"
+          class="mt-4"
+        />
+      </div>
+    </CardContent>
+  </Card>
 </template>
