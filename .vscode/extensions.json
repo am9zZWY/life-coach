@@ -1,6 +1,5 @@
 {
   "recommendations": [
-    "Vue.volar",
-    "vitest.explorer"
+    "Vue.volar"
   ]
 }
