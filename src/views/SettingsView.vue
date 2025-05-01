@@ -79,7 +79,7 @@ function addClient() {
 }
 
 function removeClient(clientId: string) {
-  knownClients.value = knownClients.value.filter(c => c !== clientId)
+  knownClients.value = knownClients.value.filter((c: string) => c !== clientId)
   toast('Client entfernt')
 }
 </script>
