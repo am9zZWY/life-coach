@@ -40,9 +40,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { WandSparkles } from 'lucide-vue-next'
-import { useAssistant } from '@/stores/assistant.ts'
+import { useAssistantStore } from '@/stores/assistant.ts'
 
-const assistantStore = useAssistant()
+const assistantStore = useAssistantStore()
 const cookingSuggestion = ref<string>('')
 const userPrompt = ref<string>('')
 const loading = ref(false)

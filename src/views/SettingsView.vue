@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { Check, Cloud, MapPin, Settings } from 'lucide-vue-next'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Check, Cloud, FolderSync, MapPin, Settings } from 'lucide-vue-next'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from 'reka-ui'
 import { useWeatherStore } from '@/stores/weather.ts'
@@ -9,34 +9,33 @@ import { computed, ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'vue-sonner'
-import { useAssistant } from '@/stores/assistant.ts'
-import { useCalendarStore } from '@/stores/calendar.ts'
-import { useDB } from '@/composables/db.ts'
-import { useDavStore } from '@/stores/dav.ts'
+import { useAssistantStore } from '@/stores/assistant.ts'
+import { useDB } from '@/composables/useDB.ts'
 import { Textarea } from '@/components/ui/textarea'
 import { useUserStore } from '@/stores/user.ts'
+import { useSyncStore } from '@/stores/sync.ts'
+import { useRouter } from 'vue-router'
+import { Badge } from '@/components/ui/badge'
+
+const router = useRouter()
 
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
 
-const gptStore = useAssistant()
+const gptStore = useAssistantStore()
 const { openAi } = storeToRefs(gptStore)
 
 const weatherStore = useWeatherStore()
 const { location, weatherApiKey } = storeToRefs(weatherStore)
 
-const calendarStore = useCalendarStore()
-const { calendarIcsUrls } = storeToRefs(calendarStore)
-const calendarUrlInput = ref<string>('')
-
-const davStore = useDavStore()
-const { appleCredentials } = storeToRefs(davStore)
+const syncStore = useSyncStore()
+const { knownClients } = storeToRefs(syncStore)
 
 const openAiApiKeyInput = ref<string>(openAi.value.openAiApiKey)
 const weatherApiKeyInput = ref<string>(weatherApiKey.value)
 const locationInput = ref<string>(location.value)
-const appleIdInput = ref<string>(appleCredentials.value.appleId)
-const appleAppPasswordInput = ref<string>(appleCredentials.value.appleAppPassword)
+const clientIdInput = ref<string>('')
+
 
 function updateOpenAiApiKey() {
   openAi.value.openAiApiKey = openAiApiKeyInput.value
@@ -60,39 +59,29 @@ function updateWeatherApiKey() {
     })
 }
 
-function addCalendar() {
-  if (calendarUrlInput.value && !calendarIcsUrls.value.includes(calendarUrlInput.value)) {
-    calendarIcsUrls.value.push(calendarUrlInput.value)
-    toast('Kalender hinzugefügt', {
-      description: 'Dein Kalender-URL wurde gespeichert.'
-    })
-    calendarUrlInput.value = ''
-  }
-}
-
-function removeCalendar(url: string) {
-  calendarIcsUrls.value = calendarIcsUrls.value.filter(u => u !== url)
-  toast('Kalender entfernt', {
-    description: 'Der Kalender-URL wurde entfernt.'
-  })
-}
-
-function saveAppleCredentials() {
-  appleCredentials.value.appleId = appleIdInput.value
-  appleCredentials.value.appleAppPassword = appleAppPasswordInput.value
-  toast('Apple-Zugangsdaten gespeichert', {
-    description: 'Deine Apple-ID und das App-spezifische Passwort wurden gespeichert.'
-  })
-}
-
 const db = useDB()
 const dbEncodedInput = ref<string>('')
 
 function saveEncodedInput() {
   db.fromString(dbEncodedInput.value)
+  // Reload
+  router.go(0)
 }
 
 const dbEncoded = computed(() => db.toString())
+
+function addClient() {
+  if (clientIdInput.value && !knownClients.value.includes(clientIdInput.value)) {
+    knownClients.value.push(clientIdInput.value)
+    toast('Client hinzugefügt')
+    clientIdInput.value = ''
+  }
+}
+
+function removeClient(clientId: string) {
+  knownClients.value = knownClients.value.filter(c => c !== clientId)
+  toast('Client entfernt')
+}
 </script>
 
 <template>
@@ -167,7 +156,8 @@ const dbEncoded = computed(() => db.toString())
                 </Button>
               </div>
               <p class="text-sm text-muted-foreground">
-                Erstelle <a class="underline hover:text-primary transition-colors" href="https://platform.openai.com/api-keys"
+                Erstelle <a class="underline hover:text-primary transition-colors"
+                            href="https://platform.openai.com/api-keys"
                             target="_blank" rel="noreferrer">hier</a> einen OpenAI Schlüssel.
               </p>
             </div>
@@ -228,7 +218,8 @@ const dbEncoded = computed(() => db.toString())
                 </Button>
               </div>
               <p class="text-sm text-muted-foreground">
-                Erstelle <a class="underline hover:text-primary transition-colors" href="https://www.weatherapi.com/my/" target="_blank"
+                Erstelle <a class="underline hover:text-primary transition-colors" href="https://www.weatherapi.com/my/"
+                            target="_blank"
                             rel="noreferrer">hier</a> einen Weather API Schlüssel.
               </p>
             </form>
@@ -338,35 +329,55 @@ const dbEncoded = computed(() => db.toString())
         <CardHeader class="space-y-1">
           <CardTitle class="flex items-center gap-2">
             <Settings class="h-5 w-5 shrink-0" />
-            Komprimierte Einstellungen
+            Synchronisation
           </CardTitle>
         </CardHeader>
 
         <CardContent>
           <div class="space-y-4">
-            <div class="rounded-md bg-muted/30 p-3 overflow-x-auto">
-              <pre class="text-xs text-muted-foreground whitespace-pre-wrap break-all">{{ dbEncoded }}</pre>
-            </div>
-
-            <form @submit.prevent="saveEncodedInput" class="space-y-4">
-              <div class="space-y-2">
-                <Label for="encodedSettings">Komprimierte Einstellungen</Label>
-                <div class="flex gap-2">
-                  <Input
-                    id="encodedSettings"
-                    v-model="dbEncodedInput"
-                    placeholder="Füge die komprimierten Einstellungen ein"
-                    class="flex-1"
-                  />
-                  <Button type="submit" size="sm" class="shrink-0">
-                    <Check class="h-4 w-4 mr-2" />
-                    Speichern
-                  </Button>
-                </div>
+            <form @submit.prevent="addClient()" class="space-y-2">
+              <Label for="clientId">Client ID</Label>
+              <div class="flex gap-2">
+                <Input
+                  id="clientId"
+                  v-model="clientIdInput"
+                  type="text"
+                  placeholder="Füge eine Client ID ein"
+                  class="flex-1"
+                />
+                <Button type="submit" size="sm" class="shrink-0">
+                  <FolderSync class="h-4 w-4 mr-2" />
+                  Hinzufügen
+                </Button>
               </div>
+              <p class="text-sm text-muted-foreground">
+                Deine Client ID lautet:
+                <Badge variant="outline">{{ syncStore.clientId }}</Badge>
+              </p>
             </form>
+
+            <Separator />
+
+            <div v-if="knownClients.length > 0" class="space-y-2">
+              <Label>Deine Clients:</Label>
+              <ul class="space-y-2">
+                <li v-for="clientId in knownClients" :key="clientId"
+                    class="flex items-center justify-between rounded-md border p-2">
+                  <span class="text-sm break-all pr-2">{{ clientId }}</span>
+                  <Button variant="destructive" size="sm" class="shrink-0" @click="removeClient(clientId)">
+                    Entfernen
+                  </Button>
+                </li>
+              </ul>
+            </div>
           </div>
         </CardContent>
+        <CardFooter>
+          <Button @click="syncStore.syncAll(true)">
+            <FolderSync class="h-4 w-4 mr-2" />
+            Synchronisieren
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   </div>

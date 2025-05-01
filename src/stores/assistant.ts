@@ -1,12 +1,12 @@
 import { ref, watch } from 'vue'
 import OpenAI from 'openai'
-import { useDB } from '@/composables/db.ts'
+import { useDB } from '@/composables/useDB.ts'
 import { defineStore } from 'pinia'
 import { useUserStore } from '@/stores/user.ts'
 import type { Assistant } from '@/models/assistant.ts'
 
 
-export const useAssistant = defineStore('assistant', () => {
+export const useAssistantStore = defineStore('assistant', () => {
 
   const db = useDB()
   const userStore = useUserStore()

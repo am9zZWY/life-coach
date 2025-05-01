@@ -1,5 +1,5 @@
 import { ref, watch } from 'vue'
-import { useDB } from '@/composables/db.ts'
+import { useDB } from '@/composables/useDB.ts'
 import { defineStore } from 'pinia'
 import type { User } from '@/models/user.ts'
 

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { createDAVClient } from 'tsdav'
 import { ref, watch } from 'vue'
-import { useDB } from '@/composables/db.ts'
+import { useDB } from '@/composables/useDB.ts'
 
 export const useDavStore = defineStore('dav', () => {
   const db = useDB()
