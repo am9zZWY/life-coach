@@ -3,6 +3,9 @@ import '@/styles/global.css'
 
 import { RouterView } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
+import { useSyncStore } from '@/stores/sync.ts'
+
+useSyncStore()
 </script>
 
 <template>

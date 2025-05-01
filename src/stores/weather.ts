@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import type { Weather, WeatherApiResponse } from '@/models/weather.ts'
-import { useDB } from '@/composables/db.ts'
+import { useDB } from '@/composables/useDB.ts'
 
 export const useWeatherStore = defineStore('weather', () => {
   const db = useDB()
@@ -17,7 +17,7 @@ export const useWeatherStore = defineStore('weather', () => {
   })
 
   const fetchWeather = async () => {
-    if (!weatherApiKey) {
+    if (!weatherApiKey.value) {
       console.error('Weather API key not found!')
       return
     }

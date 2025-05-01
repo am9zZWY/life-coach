@@ -4,14 +4,14 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { Priority, type Task } from '@/models/task'
 import { v4 as uuidv4 } from 'uuid'
-import { useAssistant } from '@/stores/assistant.ts'
-import { useDB } from '@/composables/db.ts'
+import { useAssistantStore } from '@/stores/assistant.ts'
+import { useDB } from '@/composables/useDB.ts'
 import { useCalendarStore } from '@/stores/calendar.ts'
 import task from '@/components/task/Task.vue'
 
 export const useTaskStore = defineStore('tasks', () => {
     const db = useDB()
-    const gptStore = useAssistant()
+    const gptStore = useAssistantStore()
     const calendarStore = useCalendarStore()
 
     const tasks = ref<Task[]>(db.get('tasks') ?? [])

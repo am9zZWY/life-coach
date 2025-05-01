@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { useDB } from '@/composables/db.ts'
+import { useDB } from '@/composables/useDB.ts'
 import { ref, watch } from 'vue'
 import type { IcsEvent, NonStandardValuesGeneric } from 'ts-ics'
 import { convertIcsCalendar } from 'ts-ics'

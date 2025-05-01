@@ -1,17 +1,17 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
-import { useAssistant } from '@/stores/assistant.ts'
+import { useAssistantStore } from '@/stores/assistant.ts'
 import { useTaskStore } from '@/stores/task.ts'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { useWeatherStore } from '@/stores/weather.ts'
-import { useDB } from '@/composables/db.ts'
+import { useDB } from '@/composables/useDB.ts'
 import { useDateFormat } from '@vueuse/core'
 import { Badge } from '@/components/ui/badge'
 import { MessageSquareQuote, RotateCcw } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { storeToRefs } from 'pinia'
 
-const gptStore = useAssistant()
+const gptStore = useAssistantStore()
 const weatherStore = useWeatherStore()
 const taskStore = useTaskStore()
 const { flatTasks } = storeToRefs(taskStore)

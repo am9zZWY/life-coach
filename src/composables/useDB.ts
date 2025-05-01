@@ -7,6 +7,11 @@ export function useDB() {
     return JSON.parse(localStorage.getItem(MASTER_KEY) ?? '[]')
   }
 
+  function getAge() {
+    const storedTimestamp = localStorage.getItem('age')
+    return storedTimestamp ? parseInt(storedTimestamp, 10) : new Date().getTime()
+  }
+
   function set<T>(key: string, value: T): void {
     if (value == null) {
       console.warn('Value is null or undefined')
@@ -16,8 +21,18 @@ export function useDB() {
     if (!allKeys.includes(key)) {
       allKeys.push(key)
     }
-    localStorage.setItem(key, compress(JSON.stringify(value)))
+    const before = JSON.stringify(get(key))
+    const updated = JSON.stringify(value)
+    if (before == updated) {
+      console.warn('Value did not change. Ignoring set.')
+      return
+    } else {
+      console.warn('Value updated', key)
+    }
+
+    localStorage.setItem(key, compress(updated))
     localStorage.setItem(MASTER_KEY, JSON.stringify(allKeys))
+    localStorage.setItem('age', JSON.stringify(new Date().getTime()))
   }
 
   function get<T>(key: string): T | null {
@@ -34,17 +49,38 @@ export function useDB() {
     localStorage.removeItem(key)
     const allKeys = getAllKeys().filter(k => k !== key)
     localStorage.setItem(MASTER_KEY, JSON.stringify(allKeys))
+    localStorage.setItem('age', JSON.stringify(new Date().getTime()))
   }
 
-  function toString(): string {
+  function removeAll() {
+    console.warn('No keys were found.')
+    for (const key of getAllKeys()) {
+      remove(key)
+    }
+  }
+
+  function toString(newAge: boolean = false): string {
     const keys = getAllKeys()
     const values = keys.map(key => localStorage.getItem(key) ?? null)
-    return compressToBase64(JSON.stringify({ keys, values }))
+    const age = newAge ? new Date().getTime() : getAge()
+    return compressToBase64(JSON.stringify({ keys, values, age }))
+  }
+
+  function unpack(value: string): {
+    keys: string[],
+    values: string[],
+    age: number,
+  } {
+    const { keys, values, age } = JSON.parse(decompressFromBase64(value) ?? '{}')
+    const parsedAge = new Date(age).getTime()
+    return { keys, values, age: parsedAge }
   }
 
   function fromString(input: string): void {
-    const { keys, values } = JSON.parse(decompressFromBase64(input) ?? '{}')
+    const { keys, values, age } = unpack(input)
+    console.log(`Unpacked ${keys}`)
     if (!Array.isArray(keys) || !Array.isArray(values)) {
+      console.warn('Values must be an array or an array.')
       return
     }
     keys.forEach((key, i) => {
@@ -55,5 +91,5 @@ export function useDB() {
     localStorage.setItem(MASTER_KEY, JSON.stringify(keys))
   }
 
-  return { get, set, remove, toString, fromString }
+  return { get, getAge, set, remove, removeAll, toString, fromString, unpack }
 }
