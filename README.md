@@ -1,6 +1,4 @@
-# life-coach
-
-This template should help get you started developing with Vue 3 in Vite.
+# Coach
 
 ## Recommended IDE Setup
 
