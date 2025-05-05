@@ -26,13 +26,13 @@ const gptStore = useAssistantStore()
 const { openAi } = storeToRefs(gptStore)
 
 const weatherStore = useWeatherStore()
-const { location, weatherApiKey } = storeToRefs(weatherStore)
+const { location, weather } = storeToRefs(weatherStore)
 
 const syncStore = useSyncStore()
 const { knownClients } = storeToRefs(syncStore)
 
 const openAiApiKeyInput = ref<string>(openAi.value.openAiApiKey)
-const weatherApiKeyInput = ref<string>(weatherApiKey.value)
+const weatherApiKeyInput = ref<string>(weather.value.weatherApiKey)
 const locationInput = ref<string>(location.value)
 const clientIdInput = ref<string>('')
 
@@ -52,23 +52,13 @@ function updateLocation() {
 }
 
 function updateWeatherApiKey() {
-  weatherApiKey.value = weatherApiKeyInput.value
+  weather.value.weatherApiKey = weatherApiKeyInput.value
+  console.info(weatherApiKeyInput.value)
   toast('API-Schlüssel aktualisiert',
     {
       description: 'Dein Weather API-Schlüssel wurde erfolgreich gespeichert.'
     })
 }
-
-const db = useDB()
-const dbEncodedInput = ref<string>('')
-
-function saveEncodedInput() {
-  db.fromString(dbEncodedInput.value)
-  // Reload
-  router.go(0)
-}
-
-const dbEncoded = computed(() => db.toString())
 
 function addClient() {
   if (clientIdInput.value && !knownClients.value.includes(clientIdInput.value)) {

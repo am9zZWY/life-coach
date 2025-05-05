@@ -1,11 +1,16 @@
 {
-  "name": "life-coach",
-  "version": "0.0.0",
+  "name": "coach",
+  "author": {
+    "name": "Josef Müller",
+    "url": "jpkmiller.de"
+  },
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
+    "generate-pwa-assets": "pwa-assets-generator --preset minimal-2023 public/icon.png",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build"
@@ -36,6 +41,7 @@
     "@tsconfig/node22": "^22.0.1",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^22.14.0",
+    "@vite-pwa/assets-generator": "^1.0.0",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/tsconfig": "^0.7.0",
     "jsdom": "^26.0.0",

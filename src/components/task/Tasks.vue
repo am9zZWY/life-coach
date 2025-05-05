@@ -3,7 +3,12 @@ import { useTaskStore } from '@/stores/task'
 import { computed, ref } from 'vue'
 import Task from '@/components/task/Task.vue'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Timer } from 'lucide-vue-next'
+import { useDB } from '@/composables/useDB.ts'
+import { useDateFormat } from '@vueuse/core'
+import { storeToRefs } from 'pinia'
 
 const taskStore = useTaskStore()
 const tasks = computed(() => taskStore.tasks)
@@ -20,6 +25,10 @@ const generateTasksFromCalendar = () => {
       isGenerating.value = false
     })
 }
+
+const db = useDB()
+const { lastUpdated } = storeToRefs(db)
+const lastUpdatedDate = computed(() => useDateFormat(lastUpdated, 'D. MMMM YYYY, HH:mm'))
 </script>
 
 
@@ -31,6 +40,11 @@ const generateTasksFromCalendar = () => {
         <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                 {{ taskCount }}
               </span>
+      </div>
+      <div class="flex justify-start items-center">
+        <Button variant="outline">
+          <Timer />
+        </Button>
       </div>
     </CardHeader>
     <CardContent class="overflow-y-auto px-3">
@@ -48,6 +62,11 @@ const generateTasksFromCalendar = () => {
         />
       </div>
     </CardContent>
+    <CardFooter>
+      <span class="text-xs">
+        Zuletzt aktualisiert am {{ lastUpdatedDate }}
+      </span>
+    </CardFooter>
   </Card>
 </template>
 
