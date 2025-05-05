@@ -1,6 +1,10 @@
 {
-  "name": "life-coach",
-  "version": "0.0.0",
+  "name": "coach",
+  "author": {
+    "name": "Josef Müller",
+    "url": "jpkmiller.de"
+  },
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
