@@ -16,7 +16,7 @@ jobs:
         run: bun install
 
       - name: Build project
-        run: bun run build --base=/life-coach/
+        run: bun run build --base=/coach/
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
