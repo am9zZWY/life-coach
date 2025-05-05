@@ -1,15 +1,16 @@
 import { compress, compressToBase64, decompress, decompressFromBase64 } from 'lz-string'
+import { readonly, ref } from 'vue'
+import { defineStore } from 'pinia'
 
 const MASTER_KEY = 'allKeys'
 
-export function useDB() {
+export const useDB = defineStore('db', () => {
+  const lastUpdated = ref(new Date().getTime())
+  const storedTimestamp = localStorage.getItem('age')
+  lastUpdated.value = storedTimestamp ? parseInt(storedTimestamp, 10) : new Date().getTime()
+
   function getAllKeys(): string[] {
     return JSON.parse(localStorage.getItem(MASTER_KEY) ?? '[]')
-  }
-
-  function getAge() {
-    const storedTimestamp = localStorage.getItem('age')
-    return storedTimestamp ? parseInt(storedTimestamp, 10) : new Date().getTime()
   }
 
   function set<T>(key: string, value: T): void {
@@ -24,7 +25,7 @@ export function useDB() {
     const before = JSON.stringify(get(key))
     const updated = JSON.stringify(value)
     if (before == updated) {
-      console.warn('Value did not change. Ignoring set.')
+      console.info('Value did not change. Ignoring set.')
       return
     } else {
       console.warn('Value updated', key)
@@ -32,7 +33,8 @@ export function useDB() {
 
     localStorage.setItem(key, compress(updated))
     localStorage.setItem(MASTER_KEY, JSON.stringify(allKeys))
-    localStorage.setItem('age', JSON.stringify(new Date().getTime()))
+    lastUpdated.value = Date.now()
+    localStorage.setItem('age', JSON.stringify(lastUpdated.value))
   }
 
   function get<T>(key: string): T | null {
@@ -62,7 +64,7 @@ export function useDB() {
   function toString(newAge: boolean = false): string {
     const keys = getAllKeys()
     const values = keys.map(key => localStorage.getItem(key) ?? null)
-    const age = newAge ? new Date().getTime() : getAge()
+    const age = newAge ? new Date().getTime() : lastUpdated.value
     return compressToBase64(JSON.stringify({ keys, values, age }))
   }
 
@@ -89,7 +91,9 @@ export function useDB() {
       }
     })
     localStorage.setItem(MASTER_KEY, JSON.stringify(keys))
+    lastUpdated.value = age
+    localStorage.setItem('age', JSON.stringify(lastUpdated.value))
   }
 
-  return { get, getAge, set, remove, removeAll, toString, fromString, unpack }
-}
+  return { get, set, remove, removeAll, toString, fromString, unpack, lastUpdated: readonly(lastUpdated) }
+})

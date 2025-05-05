@@ -28,4 +28,5 @@ export type Weather = {
   temperature: number,
   weather: string,
   lastUpdated: string
+  weatherApiKey: string
 }

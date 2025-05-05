@@ -1,59 +1,79 @@
 import { onUnmounted, ref, watch } from 'vue'
+import type { DataConnection } from 'peerjs'
 import Peer from 'peerjs'
 import { useDB } from '@/composables/useDB.ts'
-import { defineStore } from 'pinia'
+import { defineStore, storeToRefs } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
+
+type Connections = Record<string, DataConnection>
 
 export const useSyncStore = defineStore('sync', () => {
   const db = useDB()
-  const clientId = ref(localStorage.getItem('client') ?? `life-coach-${uuidv4()}`)
+  const { lastUpdated } = storeToRefs(db)
+
+  const clientId = ref<string>(localStorage.getItem('client') || `life-coach-${uuidv4()}`)
   localStorage.setItem('client', clientId.value)
-  const knownClients = ref(JSON.parse(localStorage.getItem('known-clients') ?? '[]'))
+  const knownClients = ref<string[]>(JSON.parse(localStorage.getItem('known-clients') || '[]'))
   watch(knownClients, kc => localStorage.setItem('known-clients', JSON.stringify(kc)), { deep: true, immediate: true })
 
-  const connections = ref<Record<string, any>>({})
-  const peer = new Peer(clientId.value, { debug: 3 })
+  const connections = ref<Connections>({})
+  const peer = new Peer(clientId.value, { debug: 0 })
 
   onUnmounted(() => peer.destroy())
 
-  // Only receivers handle incoming data
-  peer.on('connection', conn => {
+  function addConnection(conn: DataConnection) {
     connections.value[conn.peer] = conn
     conn.on('data', (data: unknown) => {
-      const { age: incomingAge } = db.unpack(data as string)
-      if (incomingAge > db.getAge()) {
+      const { age } = db.unpack(data as string)
+      if (age > db.lastUpdated) {
         db.fromString(data as string)
       }
     })
-    conn.on('error', (err: any) => console.error(`Connection error with ${conn.peer}:`, err))
+    conn.on('error', () => {
+    })
     conn.on('close', () => delete connections.value[conn.peer])
-  })
-  peer.on('error', console.error)
+  }
 
-  // Sender initiates sync, sends data, but does not expect/handle data back
-  function sync(targetId: string, trial = 0, force = false) {
+  peer.on('connection', (conn: DataConnection) => addConnection(conn))
+  peer.on('error', () => {
+  })
+
+  function connectToPeer(targetId: string, trial = 0) {
     if (trial >= 3 || targetId === clientId.value) {
       return
     }
-    let conn = connections.value[targetId]
-    if (!conn || !conn.open) {
-      try {
-        conn = peer.connect(targetId)
-        connections.value[targetId] = conn
-        conn.on('open', () => conn.send(db.toString(force)))
-        conn.on('error', (err: any) => {
-          setTimeout(() => sync(targetId, trial + 1, force), 1000 * (trial + 1))
-        })
-        conn.on('close', () => delete connections.value[targetId])
-      } catch {
-        setTimeout(() => sync(targetId, trial + 1, force), 1000 * (trial + 1))
-      }
-    } else {
+    if (connections.value[targetId] && connections.value[targetId].open) {
+      return
+    }
+    try {
+      const conn = peer.connect(targetId)
+      connections.value[targetId] = conn
+      conn.on('open', () => {
+      })
+      conn.on('error', () => setTimeout(() => connectToPeer(targetId, trial + 1), 1000 * (trial + 1)))
+      conn.on('close', () => delete connections.value[targetId])
+      addConnection(conn)
+    } catch {
+      setTimeout(() => connectToPeer(targetId, trial + 1), 1000 * (trial + 1))
+    }
+  }
+
+  function sync(targetId: string, force = false) {
+    const conn = connections.value[targetId]
+    if (conn && conn.open) {
       conn.send(db.toString(force))
     }
   }
 
-  const syncAll = (force = false) => knownClients.value.forEach((id: string) => sync(id, 0, force))
+  const syncAll = (force = false): void => {
+    knownClients.value.forEach(id => {
+      connectToPeer(id)
+      sync(id, force)
+    })
+  }
+
+  watch(lastUpdated, () => syncAll(), { immediate: true })
+  watch(knownClients, () => knownClients.value.forEach(connectToPeer), { immediate: true })
 
   return { syncAll, clientId, knownClients }
 })

@@ -1,24 +1,28 @@
 // noinspection t
 
-import { defineStore } from 'pinia'
+import { defineStore, storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { Priority, type Task } from '@/models/task'
 import { v4 as uuidv4 } from 'uuid'
 import { useAssistantStore } from '@/stores/assistant.ts'
 import { useDB } from '@/composables/useDB.ts'
 import { useCalendarStore } from '@/stores/calendar.ts'
-import task from '@/components/task/Task.vue'
 
 export const useTaskStore = defineStore('tasks', () => {
     const db = useDB()
+    const { lastUpdated } = storeToRefs(db)
+
     const gptStore = useAssistantStore()
     const calendarStore = useCalendarStore()
 
     const tasks = ref<Task[]>(db.get('tasks') ?? [])
     watch(tasks, () => {
-      console.warn('Tasks store changed')
       db.set('tasks', tasks.value)
     }, { deep: true })
+    watch(lastUpdated, () => {
+      tasks.value = db.get('tasks') ?? []
+    })
+
     const flatTasks = computed(() => getAllTasksR(tasks.value))
 
     function getAllTasksR(base: Task[]): Task[] {
