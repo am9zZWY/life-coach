@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
+    "generate-pwa-assets": "pwa-assets-generator --preset minimal-2023 public/icon.png",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build"
