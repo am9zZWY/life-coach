@@ -1,11 +1,13 @@
 name: Test Client Builds
 on:
   push:
-    paths:
-      - ./**
+    branches:
+      - master
   pull_request:
     paths:
-      - ./**
+      - ./
+      - ./**/*
+
 jobs:
   build:
     runs-on: ubuntu-latest
